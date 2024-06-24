@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
+
 import 'package:game_tips_manager/ad_helper.dart';
 import 'package:game_tips_manager/widgets/custom_dropdown_button.dart';
 import 'package:game_tips_manager/widgets/full_image_screen.dart';
@@ -36,6 +38,12 @@ class _MapPageState extends State<MapPage> {
   File? imageFile;
   static const String imagePathKey = 'selectedImagePath';
 
+  static const String iconColorKey = 'iconColor';
+  Color _iconColor = const Color.fromARGB(255, 243, 243, 243);
+
+  static const String backgroundColorKey = 'backgroundColor';
+  Color _backgroundColor = Color.fromARGB(255, 0, 0, 0);
+
   BannerAd? _topBannerAd;
   BannerAd? _bottomBannerAd;
   BannerAd? _memoListBannerAd;
@@ -48,6 +56,8 @@ class _MapPageState extends State<MapPage> {
     _loadTopBannerAd();
     _loadBottomBannerAd();
     _loadMemoListBannerAd();
+    _loadIconColor();
+    _loadBackgroundColor();
   }
 
   Future<void> _pickImage() async {
@@ -80,6 +90,58 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  Future<void> _saveIconColor(Color color) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(iconColorKey, color.value);
+  }
+
+  Future<void> _loadIconColor() async {
+    final prefs = await SharedPreferences.getInstance();
+    final colorValue = prefs.getInt(iconColorKey);
+
+    if (colorValue != null) {
+      setState(() {
+        _iconColor = Color(colorValue);
+      });
+    }
+  }
+
+  void _pickColor() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select a color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              color: _iconColor,
+              onColorChanged: (color) {
+                setState(() {
+                  _iconColor = color;
+                });
+                _saveIconColor(color);
+              },
+              heading: const Text(
+                'Select color',
+              ),
+              subheading: const Text(
+                'Select color shade',
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _loadIcons() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -101,6 +163,58 @@ class _MapPageState extends State<MapPage> {
     prefs.setString('icons_${widget.pageId}_tab2', json.encode(_iconsTab2));
     prefs.setString('icons_${widget.pageId}_tab3', json.encode(_iconsTab3));
     prefs.setString('icons_${widget.pageId}_tab4', json.encode(_iconsTab4));
+  }
+
+  Future<void> _saveBackgroundColor(Color color) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(backgroundColorKey, color.value);
+  }
+
+  Future<void> _loadBackgroundColor() async {
+    final prefs = await SharedPreferences.getInstance();
+    final colorValue = prefs.getInt(backgroundColorKey);
+
+    if (colorValue != null) {
+      setState(() {
+        _backgroundColor = Color(colorValue);
+      });
+    }
+  }
+
+  void _pickBackgroundColor() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select a background color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              color: _backgroundColor,
+              onColorChanged: (color) {
+                setState(() {
+                  _backgroundColor = color;
+                });
+                _saveBackgroundColor(color);
+              },
+              heading: const Text(
+                'Select color',
+              ),
+              subheading: const Text(
+                'Select color shade',
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _addIcon(TapUpDetails details) async {
@@ -666,8 +780,6 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    const startAlignment = Alignment.topLeft;
-    const endAlignment = Alignment.bottomRight;
     return DefaultTabController(
       length: 4,
       child: Scaffold(
@@ -703,15 +815,9 @@ class _MapPageState extends State<MapPage> {
                 child: Stack(
                   children: [
                     Container(
-                      decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                        colors: [
-                          Color.fromARGB(255, 0, 0, 0),
-                          Color.fromARGB(255, 0, 0, 0)
-                        ],
-                        begin: startAlignment,
-                        end: endAlignment,
-                      )),
+                      decoration: BoxDecoration(
+                        color: _backgroundColor, // 単色で背景色を設定
+                      ),
                       child: Center(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -765,10 +871,9 @@ class _MapPageState extends State<MapPage> {
                                         onTap: () => _showMemoList(index),
                                         onLongPress: () =>
                                             _confirmDelete(index),
-                                        child: const Icon(
+                                        child: Icon(
                                           Icons.location_on,
-                                          color: Color.fromARGB(
-                                              255, 243, 243, 243),
+                                          color: _iconColor,
                                         ),
                                       ),
                                     );
@@ -783,10 +888,24 @@ class _MapPageState extends State<MapPage> {
                 ),
               ),
             ),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: const Text('Upload Image'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: _pickColor,
+                  child: const Text('Marker Color'),
+                ),
+                ElevatedButton(
+                  onPressed: _pickBackgroundColor,
+                  child: const Text('Background Color'),
+                ),
+                ElevatedButton(
+                  onPressed: _pickImage,
+                  child: const Text('Image'),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
             SizedBox(
               width: AdSize.banner.width.toDouble(),
               height: AdSize.banner.height.toDouble(),
