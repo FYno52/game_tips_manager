@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class SelectButton extends StatelessWidget {
   final String text;
-  final String pageName;
+  final Widget destinationPage;
 
-  const SelectButton({super.key, required this.text, required this.pageName});
+  const SelectButton(
+      {super.key, required this.text, required this.destinationPage});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,10 @@ class SelectButton extends StatelessWidget {
             constraints.maxWidth / 1.8; // Adjust the aspect ratio as needed
 
         return InkWell(
-          onTap: () => context.pushNamed(pageName),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => destinationPage),
+          ),
           child: Container(
             padding: const EdgeInsets.all(10),
             height: height,
