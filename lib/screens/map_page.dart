@@ -13,9 +13,11 @@ import 'dart:convert';
 
 class MapPage extends StatefulWidget {
   final String pageId;
-  final String mapPageName;
 
-  const MapPage({super.key, required this.pageId, required this.mapPageName});
+  const MapPage({
+    super.key,
+    required this.pageId,
+  });
 
   @override
   _MapPageState createState() => _MapPageState();

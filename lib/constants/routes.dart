@@ -27,7 +27,6 @@ final GoRouter router = GoRouter(
                 builder: (BuildContext context, GoRouterState state) {
                   return const MapPage(
                     pageId: 'ascent',
-                    mapPageName: 'Ascent',
                   );
                 },
               ),
@@ -37,7 +36,6 @@ final GoRouter router = GoRouter(
                 builder: (BuildContext context, GoRouterState state) {
                   return const MapPage(
                     pageId: 'breeze',
-                    mapPageName: 'Breeze',
                   );
                 },
               ),

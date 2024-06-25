@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:game_tips_manager/ad_helper.dart';
+import 'package:game_tips_manager/screens/map_page.dart';
 import 'package:game_tips_manager/widgets/back_ground.dart';
 import 'package:game_tips_manager/widgets/custom_drawer.dart';
 import 'package:game_tips_manager/widgets/map_select_button.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 
 class TipsStartScreen extends StatefulWidget {
@@ -20,8 +22,9 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
   bool _showIntro = false;
   BannerAd? _topBannerAd;
   BannerAd? _bottomBannerAd;
+  final Uuid _uuid = const Uuid();
 
-  List<Map<String, String>> _maps = [];
+  List<Map<String, String?>> _maps = [];
 
   @override
   void initState() {
@@ -86,11 +89,10 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
   }
 
   Future<void> _showAddMapDialog() async {
-    String pageName = '';
     String mapName = '';
     XFile? imageFile;
 
-    Future<void> pickImage() async {
+    Future<void> _pickImage() async {
       final ImagePicker picker = ImagePicker();
       imageFile = await picker.pickImage(source: ImageSource.gallery);
     }
@@ -105,18 +107,12 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
             children: [
               TextField(
                 onChanged: (value) {
-                  pageName = value;
-                },
-                decoration: const InputDecoration(labelText: 'Page Name'),
-              ),
-              TextField(
-                onChanged: (value) {
                   mapName = value;
                 },
                 decoration: const InputDecoration(labelText: 'Title'),
               ),
               ElevatedButton(
-                onPressed: pickImage,
+                onPressed: _pickImage,
                 child: const Text('Select Image'),
               ),
             ],
@@ -124,14 +120,15 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           actions: [
             TextButton(
               onPressed: () {
+                final String pageId = _uuid.v4();
                 setState(() {
                   _maps.add({
-                    'pageName': pageName,
+                    'pageId': pageId,
                     'mapName': mapName,
-                    'imageFile': imageFile?.path ?? '',
+                    'imageFile': imageFile?.path,
                   });
                 });
-                _saveMaps();
+                _saveMaps(); // Save maps immediately after adding
                 Navigator.of(context).pop();
               },
               child: const Text('Add'),
@@ -159,7 +156,7 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     String? mapsJson = prefs.getString('maps');
     if (mapsJson != null) {
       setState(() {
-        _maps = List<Map<String, String>>.from(json.decode(mapsJson));
+        _maps = List<Map<String, String?>>.from(json.decode(mapsJson));
       });
     }
   }
@@ -179,23 +176,39 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           children: [
             Expanded(
               child: MapSelectButton(
-                pageName: _maps[i]['pageName'],
                 mapName: _maps[i]['mapName'],
                 imageFile: _maps[i]['imageFile'] != null &&
                         _maps[i]['imageFile']!.isNotEmpty
                     ? File(_maps[i]['imageFile']!)
                     : null,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          MapPage(pageId: _maps[i]['pageId']!), // pageIdを使用
+                    ),
+                  );
+                },
               ),
             ),
             if (i + 1 < _maps.length)
               Expanded(
                 child: MapSelectButton(
-                  pageName: _maps[i + 1]['pageName'],
                   mapName: _maps[i + 1]['mapName'],
                   imageFile: _maps[i + 1]['imageFile'] != null &&
                           _maps[i + 1]['imageFile']!.isNotEmpty
                       ? File(_maps[i + 1]['imageFile']!)
                       : null,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MapPage(
+                            pageId: _maps[i + 1]['pageId']!), // pageIdを使用
+                      ),
+                    );
+                  },
                 ),
               )
             else

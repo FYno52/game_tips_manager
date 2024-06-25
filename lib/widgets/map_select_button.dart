@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'dart:io';
 
 class MapSelectButton extends StatelessWidget {
-  final String? pageName;
   final String? mapName; //画像の名前がそのままボタンに反映されるので注意
   final File? imageFile; // 画像のファイルパスを追加
+  final VoidCallback onTap;
 
   const MapSelectButton({
     super.key,
-    this.pageName,
     this.mapName,
     this.imageFile,
+    required this.onTap,
   });
 
   @override
@@ -24,9 +24,10 @@ class MapSelectButton extends StatelessWidget {
 
         return InkWell(
           onTap: () {
-            if (pageName != null) {
-              context.pushNamed(pageName!);
-            }
+            onTap();
+            // if (mapName != null) {
+            //   context.push(mapName!);
+            // }
           },
           child: Container(
             padding: const EdgeInsets.all(5),
