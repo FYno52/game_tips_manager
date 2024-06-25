@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:game_tips_manager/ad_helper.dart';
 import 'package:game_tips_manager/widgets/back_ground.dart';
@@ -5,6 +6,8 @@ import 'package:game_tips_manager/widgets/custom_drawer.dart';
 import 'package:game_tips_manager/widgets/map_select_button.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 
 class TipsStartScreen extends StatefulWidget {
   const TipsStartScreen({super.key});
@@ -18,12 +21,15 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
   BannerAd? _topBannerAd;
   BannerAd? _bottomBannerAd;
 
+  List<Map<String, String>> _maps = [];
+
   @override
   void initState() {
     super.initState();
     _checkFirstTime();
     _loadTopBannerAd();
     _loadBottomBannerAd();
+    _loadMaps();
   }
 
   Future<void> _checkFirstTime() async {
@@ -79,11 +85,126 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     });
   }
 
+  Future<void> _showAddMapDialog() async {
+    String pageName = '';
+    String mapName = '';
+    XFile? imageFile;
+
+    Future<void> pickImage() async {
+      final ImagePicker picker = ImagePicker();
+      imageFile = await picker.pickImage(source: ImageSource.gallery);
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add Tips Page'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) {
+                  pageName = value;
+                },
+                decoration: const InputDecoration(labelText: 'Page Name'),
+              ),
+              TextField(
+                onChanged: (value) {
+                  mapName = value;
+                },
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              ElevatedButton(
+                onPressed: pickImage,
+                child: const Text('Select Image'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _maps.add({
+                    'pageName': pageName,
+                    'mapName': mapName,
+                    'imageFile': imageFile?.path ?? '',
+                  });
+                });
+                _saveMaps();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _saveMaps() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String mapsJson = json.encode(_maps);
+    await prefs.setString('maps', mapsJson);
+  }
+
+  Future<void> _loadMaps() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? mapsJson = prefs.getString('maps');
+    if (mapsJson != null) {
+      setState(() {
+        _maps = List<Map<String, String>>.from(json.decode(mapsJson));
+      });
+    }
+  }
+
   @override
   void dispose() {
     _topBannerAd?.dispose();
     _bottomBannerAd?.dispose();
     super.dispose();
+  }
+
+  Widget _buildMapButtons() {
+    List<Widget> rows = [];
+    for (int i = 0; i < _maps.length; i += 2) {
+      rows.add(
+        Row(
+          children: [
+            Expanded(
+              child: MapSelectButton(
+                pageName: _maps[i]['pageName'],
+                mapName: _maps[i]['mapName'],
+                imageFile: _maps[i]['imageFile'] != null &&
+                        _maps[i]['imageFile']!.isNotEmpty
+                    ? File(_maps[i]['imageFile']!)
+                    : null,
+              ),
+            ),
+            if (i + 1 < _maps.length)
+              Expanded(
+                child: MapSelectButton(
+                  pageName: _maps[i + 1]['pageName'],
+                  mapName: _maps[i + 1]['mapName'],
+                  imageFile: _maps[i + 1]['imageFile'] != null &&
+                          _maps[i + 1]['imageFile']!.isNotEmpty
+                      ? File(_maps[i + 1]['imageFile']!)
+                      : null,
+                ),
+              )
+            else
+              Expanded(child: Container()),
+          ],
+        ),
+      );
+    }
+    return Column(children: rows);
   }
 
   @override
@@ -105,88 +226,24 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           Expanded(
             child: Stack(
               children: [
-                const BackGround(
+                BackGround(
                   children: [
                     Column(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "ascent", mapName: "Ascent"),
-                            ),
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "breeze", mapName: "Breeze"),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "bind", mapName: "Bind"),
-                            ),
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "split", mapName: "Split"),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "haven", mapName: "Haven"),
-                            ),
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "sunset", mapName: "Sunset"),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "fracture", mapName: "Fracture"),
-                            ),
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "lotus", mapName: "Lotus"),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "icebox", mapName: "Icebox"),
-                            ),
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "pearl", mapName: "Pearl"),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: "abyss", mapName: "Abyss"),
-                            ),
-                            Expanded(
-                              child: MapSelectButton(
-                                  pageName: null, mapName: null),
-                            ),
-                          ],
-                        ),
+                        _buildMapButtons(),
                       ],
                     ),
                   ],
                 ),
                 if (_showIntro) _buildIntroDialog(),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: _showAddMapDialog,
+              child: const Text('Add Tips'),
             ),
           ),
           SizedBox(

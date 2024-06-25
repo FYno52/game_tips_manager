@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
 
 class MapSelectButton extends StatelessWidget {
   final String? pageName;
   final String? mapName; //画像の名前がそのままボタンに反映されるので注意
+  final File? imageFile; // 画像のファイルパスを追加
 
   const MapSelectButton({
     super.key,
     this.pageName,
     this.mapName,
+    this.imageFile,
   });
 
   @override
@@ -30,20 +33,30 @@ class MapSelectButton extends StatelessWidget {
             height: height,
             child: Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: Image.asset(
-                    'assets/images/maps/intro/${mapName ?? "Default"}.jpg', // Default image name
-                    fit: BoxFit.cover,
+                if (imageFile != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
+                    child: Image.file(
+                      imageFile!,
+                      fit: BoxFit.cover,
+                      width: constraints.maxWidth,
+                      height: height,
+                    ),
+                  )
+                else
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
                     width: constraints.maxWidth,
                     height: height,
                   ),
-                ),
                 Positioned.fill(
                   child: Align(
                     alignment: Alignment.center,
                     child: Text(
-                      mapName ?? 'Upcoming', // Default text
+                      mapName ?? 'None', // Default text
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: constraints.maxWidth *
