@@ -35,14 +35,14 @@ class _MapPageState extends State<MapPage> {
   double _imageHeight = 1.0;
   bool _isImageLoaded = false;
 
-  File? imageFile;
-  static const String imagePathKey = 'selectedImagePath';
+  File? _imageFile;
+  static const String _imagePathKey = 'selectedImagePath';
 
-  static const String iconColorKey = 'iconColor';
+  static const String _iconColorKey = 'iconColor';
   Color _iconColor = const Color.fromARGB(255, 243, 243, 243);
 
-  static const String backgroundColorKey = 'backgroundColor';
-  Color _backgroundColor = Color.fromARGB(255, 0, 0, 0);
+  static const String _backgroundColorKey = 'backgroundColor';
+  Color _backgroundColor = const Color.fromARGB(255, 0, 0, 0);
 
   BannerAd? _topBannerAd;
   BannerAd? _bottomBannerAd;
@@ -66,7 +66,7 @@ class _MapPageState extends State<MapPage> {
 
     if (pickedFile != null) {
       setState(() {
-        imageFile = File(pickedFile.path);
+        _imageFile = File(pickedFile.path);
         _isImageLoaded = false; // Reset the flag when a new image is picked
         _saveImagePath(pickedFile.path); // Save the new image path
       });
@@ -75,16 +75,16 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _saveImagePath(String path) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(imagePathKey, path);
+    await prefs.setString('${_imagePathKey}_${widget.pageId}', path);
   }
 
   Future<void> _loadImagePath() async {
     final prefs = await SharedPreferences.getInstance();
-    final imagePath = prefs.getString(imagePathKey);
+    final imagePath = prefs.getString('${_imagePathKey}_${widget.pageId}');
 
     if (imagePath != null && File(imagePath).existsSync()) {
       setState(() {
-        imageFile = File(imagePath);
+        _imageFile = File(imagePath);
         _isImageLoaded = false; // Reset the flag when the image is loaded
       });
     }
@@ -92,12 +92,12 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _saveIconColor(Color color) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(iconColorKey, color.value);
+    await prefs.setInt('${_iconColorKey}_${widget.pageId}', color.value);
   }
 
   Future<void> _loadIconColor() async {
     final prefs = await SharedPreferences.getInstance();
-    final colorValue = prefs.getInt(iconColorKey);
+    final colorValue = prefs.getInt('${_iconColorKey}_${widget.pageId}');
 
     if (colorValue != null) {
       setState(() {
@@ -167,12 +167,12 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _saveBackgroundColor(Color color) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(backgroundColorKey, color.value);
+    await prefs.setInt('${_backgroundColorKey}_${widget.pageId}', color.value);
   }
 
   Future<void> _loadBackgroundColor() async {
     final prefs = await SharedPreferences.getInstance();
-    final colorValue = prefs.getInt(backgroundColorKey);
+    final colorValue = prefs.getInt('${_backgroundColorKey}_${widget.pageId}');
 
     if (colorValue != null) {
       setState(() {
@@ -828,11 +828,11 @@ class _MapPageState extends State<MapPage> {
                             return Stack(
                               key: _stackKey,
                               children: [
-                                if (imageFile != null)
+                                if (_imageFile != null)
                                   GestureDetector(
                                     onTapUp: _addIcon,
                                     child: Image.file(
-                                      imageFile!,
+                                      _imageFile!,
                                       width: imageSize,
                                       height: imageSize,
                                       fit: BoxFit.contain,
@@ -901,7 +901,7 @@ class _MapPageState extends State<MapPage> {
                 ),
                 ElevatedButton(
                   onPressed: _pickImage,
-                  child: const Text('Image'),
+                  child: const Text('Set Image'),
                 ),
               ],
             ),
