@@ -891,17 +891,23 @@ class _MapPageState extends State<MapPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton(
-                  onPressed: _pickColor,
-                  child: const Text('Marker Color'),
+                Flexible(
+                  child: ElevatedButton(
+                    onPressed: _pickColor,
+                    child: const Text('Marker Color'),
+                  ),
                 ),
-                ElevatedButton(
-                  onPressed: _pickBackgroundColor,
-                  child: const Text('Background Color'),
+                Flexible(
+                  child: ElevatedButton(
+                    onPressed: _pickBackgroundColor,
+                    child: const Text('Background Color'),
+                  ),
                 ),
-                ElevatedButton(
-                  onPressed: _pickImage,
-                  child: const Text('Set Image'),
+                Flexible(
+                  child: ElevatedButton(
+                    onPressed: _pickImage,
+                    child: const Text('Set Image'),
+                  ),
                 ),
               ],
             ),

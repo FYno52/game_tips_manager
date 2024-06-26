@@ -155,8 +155,12 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? mapsJson = prefs.getString('maps');
     if (mapsJson != null) {
+      List<dynamic> decodedMaps = json.decode(mapsJson);
+      List<Map<String, String?>> typedMaps = decodedMaps.map((item) {
+        return Map<String, String?>.from(item);
+      }).toList();
       setState(() {
-        _maps = List<Map<String, String?>>.from(json.decode(mapsJson));
+        _maps = typedMaps;
       });
     }
   }
