@@ -23,6 +23,8 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
   BannerAd? _topBannerAd;
   BannerAd? _bottomBannerAd;
   final Uuid _uuid = const Uuid();
+  bool isSortedByName = false;
+  bool _isAscending = true;
 
   List<Map<String, String?>> _maps = [];
 
@@ -33,6 +35,7 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     _loadTopBannerAd();
     _loadBottomBannerAd();
     _loadMaps();
+    _loadSortPreferences();
   }
 
   Future<void> _checkFirstTime() async {
@@ -165,6 +168,49 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     }
   }
 
+  void _sortMaps(String criterion, {bool save = true, bool? ascending}) {
+    setState(() {
+      bool isAscending = ascending ?? _isAscending;
+      if (criterion == 'name') {
+        _maps.sort((a, b) =>
+            a['mapName']!.compareTo(b['mapName']!) * (isAscending ? 1 : -1));
+        isSortedByName = true;
+      } else if (criterion == 'creation') {
+        _maps.sort((a, b) =>
+            a['pageId']!.compareTo(b['pageId']!) * (isAscending ? 1 : -1));
+        isSortedByName = false;
+      }
+      _isAscending = isAscending;
+    });
+    if (save) {
+      _saveSortPreferences();
+    }
+  }
+
+  Future<void> _loadSortPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    isSortedByName = prefs.getBool('isSortedByName') ?? false;
+    _isAscending = prefs.getBool('isAscending') ?? true;
+    _sortMaps(isSortedByName ? 'name' : 'creation',
+        save: false, ascending: _isAscending);
+  }
+
+  Future<void> _saveSortPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isSortedByName', isSortedByName);
+    await prefs.setBool('isAscending', _isAscending);
+  }
+
+  void _onSortSelected(String criterion) {
+    if (isSortedByName == (criterion == 'name')) {
+      // ソート基準が同じなら昇順/降順を反転
+      _sortMaps(criterion, ascending: !_isAscending);
+    } else {
+      // ソート基準が違うならデフォルトの昇順でソート
+      _sortMaps(criterion, ascending: true);
+    }
+  }
+
   @override
   void dispose() {
     _topBannerAd?.dispose();
@@ -258,9 +304,33 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: _showAddMapDialog,
-              child: const Text('Add Tips'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                PopupMenuButton<String>(
+                  onSelected: _onSortSelected,
+                  itemBuilder: (BuildContext context) {
+                    return [
+                      PopupMenuItem<String>(
+                        value: 'name',
+                        child: Text(
+                            'Sort by Name (${isSortedByName ? 'Asc' : 'Desc'})'),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'creation',
+                        child: Text(
+                            'Sort by Creation (${_isAscending ? 'Asc' : 'Desc'})'),
+                      ),
+                    ];
+                  },
+                  icon: const Icon(Icons.sort),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _showAddMapDialog,
+                  child: const Text('Add Tips'),
+                ),
+              ],
             ),
           ),
           SizedBox(
