@@ -214,6 +214,81 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
     }
   }
 
+  Future<void> _showEditMapDialog(int index) async {
+    String mapName = _maps[index]['mapName'] ?? '';
+    XFile? imageFile;
+
+    Future<void> pickImage() async {
+      final ImagePicker picker = ImagePicker();
+      imageFile = await picker.pickImage(source: ImageSource.gallery);
+    }
+
+    Future<void> deleteMapData(String pageId) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove(pageId);
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) {
+                  mapName = value;
+                },
+                controller: TextEditingController(text: mapName),
+                decoration: const InputDecoration(labelText: 'Game Title'),
+                maxLength: 20,
+              ),
+              ElevatedButton(
+                onPressed: pickImage,
+                child: const Text('Select Image'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _maps[index] = {
+                    'pageId': _maps[index]['pageId'],
+                    'mapName': mapName,
+                    'imageFile': imageFile?.path ?? _maps[index]['imageFile'],
+                  };
+                });
+                _saveMaps(); // Save maps immediately after editing
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                String pageId = _maps[index]['pageId']!;
+                await deleteMapData(pageId); // Delete associated data
+                setState(() {
+                  _maps.removeAt(index);
+                });
+                _saveMaps(); // Save maps immediately after deleting
+                Navigator.of(context).pop();
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _topBannerAd?.dispose();
@@ -222,46 +297,61 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
   }
 
   Widget _buildMapButtons() {
+    if (_maps.isEmpty) {
+      return const Center(
+        child: Text(
+          'Add Game Title',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
     List<Widget> rows = [];
     for (int i = 0; i < _maps.length; i += 2) {
       rows.add(
         Row(
           children: [
             Expanded(
-              child: MapSelectButton(
-                mapName: _maps[i]['mapName'],
-                imageFile: _maps[i]['imageFile'] != null &&
-                        _maps[i]['imageFile']!.isNotEmpty
-                    ? File(_maps[i]['imageFile']!)
-                    : null,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TipsStartScreen(
-                          tipspageId: _maps[i]['pageId']!), // pageIdを使用
-                    ),
-                  );
-                },
-              ),
-            ),
-            if (i + 1 < _maps.length)
-              Expanded(
+              child: GestureDetector(
+                onLongPress: () => _showEditMapDialog(i),
                 child: MapSelectButton(
-                  mapName: _maps[i + 1]['mapName'],
-                  imageFile: _maps[i + 1]['imageFile'] != null &&
-                          _maps[i + 1]['imageFile']!.isNotEmpty
-                      ? File(_maps[i + 1]['imageFile']!)
+                  mapName: _maps[i]['mapName'],
+                  imageFile: _maps[i]['imageFile'] != null &&
+                          _maps[i]['imageFile']!.isNotEmpty
+                      ? File(_maps[i]['imageFile']!)
                       : null,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => TipsStartScreen(
-                            tipspageId: _maps[i + 1]['pageId']!), // pageIdを使用
+                            tipspageId: _maps[i]['pageId']!), // pageIdを使用
                       ),
                     );
                   },
+                ),
+              ),
+            ),
+            if (i + 1 < _maps.length)
+              Expanded(
+                child: GestureDetector(
+                  onLongPress: () => _showEditMapDialog(i + 1),
+                  child: MapSelectButton(
+                    mapName: _maps[i + 1]['mapName'],
+                    imageFile: _maps[i + 1]['imageFile'] != null &&
+                            _maps[i + 1]['imageFile']!.isNotEmpty
+                        ? File(_maps[i + 1]['imageFile']!)
+                        : null,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TipsStartScreen(
+                              tipspageId: _maps[i + 1]['pageId']!), // pageIdを使用
+                        ),
+                      );
+                    },
+                  ),
                 ),
               )
             else
