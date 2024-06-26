@@ -272,14 +272,42 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () async {
-                String pageId = _maps[index]['pageId']!;
-                await deleteMapData(pageId); // Delete associated data
-                setState(() {
-                  _maps.removeAt(index);
-                });
-                _saveMaps(); // Save maps immediately after deleting
-                Navigator.of(context).pop();
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Confirm Deletion'),
+                      content: const Text(
+                          'Are you sure you want to delete this title?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context)
+                                .pop(); // Close the confirmation dialog
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            String pageId = _maps[index]['pageId']!;
+                            await deleteMapData(
+                                pageId); // Delete associated data
+                            setState(() {
+                              _maps.removeAt(index);
+                            });
+                            _saveMaps(); // Save maps immediately after deleting
+                            Navigator.of(context)
+                                .pop(); // Close the confirmation dialog
+                            Navigator.of(context)
+                                .pop(); // Close the edit dialog
+                          },
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
               child: const Text('Delete'),
             ),

@@ -272,13 +272,39 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
             ),
             TextButton(
               onPressed: () async {
-                String pageId = _maps[index]['pageId']!;
-                await deleteMapData(pageId); // Delete associated data
-                setState(() {
-                  _maps.removeAt(index);
-                });
-                _saveMaps(); // Save maps immediately after deleting
-                Navigator.of(context).pop();
+                bool? confirmDelete = await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Confirm Delete'),
+                      content: const Text(
+                          'Are you sure you want to delete this tip?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          child: const Text('Delete'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (confirmDelete == true) {
+                  setState(() {
+                    deleteMapData(_maps[index]['pageId']!);
+                    _maps.removeAt(index);
+                  });
+                  _saveMaps(); // Save maps immediately after deleting
+                  Navigator.of(context).pop();
+                }
               },
               child: const Text('Delete'),
             ),
