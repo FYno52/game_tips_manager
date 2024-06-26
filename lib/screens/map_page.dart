@@ -857,6 +857,17 @@ class _MapPageState extends State<MapPage> {
                                         return child;
                                       },
                                     ),
+                                  )
+                                else
+                                  const Center(
+                                    child: Text(
+                                      'Please set the image first.',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255)),
+                                    ),
                                   ),
                                 if (_isImageLoaded)
                                   ..._icons.asMap().entries.map((entry) {
