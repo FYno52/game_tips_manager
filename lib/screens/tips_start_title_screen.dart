@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:game_tips_manager/ad_helper.dart';
-import 'package:game_tips_manager/screens/map_page.dart';
+import 'package:game_tips_manager/screens/tips_start_screen.dart';
 import 'package:game_tips_manager/widgets/back_ground.dart';
+import 'package:game_tips_manager/widgets/custom_drawer.dart';
 import 'package:game_tips_manager/widgets/map_select_button.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,15 +11,16 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 
-class TipsStartScreen extends StatefulWidget {
-  final String tipspageId;
-  const TipsStartScreen({super.key, required this.tipspageId});
+class TipsStartTitleScreen extends StatefulWidget {
+  const TipsStartTitleScreen({
+    super.key,
+  });
 
   @override
-  _TipsStartScreenState createState() => _TipsStartScreenState();
+  _TipsStartTitleScreenState createState() => _TipsStartTitleScreenState();
 }
 
-class _TipsStartScreenState extends State<TipsStartScreen> {
+class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
   bool _showIntro = false;
   BannerAd? _topBannerAd;
   BannerAd? _bottomBannerAd;
@@ -124,10 +126,10 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                final String pageId = _uuid.v4();
+                final String titlePageId = _uuid.v4();
                 setState(() {
                   _maps.add({
-                    'pageId': pageId,
+                    'pageId': titlePageId,
                     'mapName': mapName,
                     'imageFile': imageFile?.path,
                   });
@@ -151,15 +153,15 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
 
   Future<void> _saveMaps() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String mapsJson = json.encode(_maps);
-    await prefs.setString('maps_${widget.tipspageId}', mapsJson);
+    String titlesJson = json.encode(_maps);
+    await prefs.setString('titles', titlesJson);
   }
 
   Future<void> _loadMaps() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? mapsJson = prefs.getString('maps_${widget.tipspageId}');
-    if (mapsJson != null) {
-      List<dynamic> decodedMaps = json.decode(mapsJson);
+    String? titlesJson = prefs.getString('titles');
+    if (titlesJson != null) {
+      List<dynamic> decodedMaps = json.decode(titlesJson);
       List<Map<String, String?>> typedMaps = decodedMaps.map((item) {
         return Map<String, String?>.from(item);
       }).toList();
@@ -190,17 +192,16 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
 
   Future<void> _loadSortPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    isSortedByName =
-        prefs.getBool('isSortedByName_${widget.tipspageId}') ?? false;
-    _isAscending = prefs.getBool('isAscending_${widget.tipspageId}') ?? true;
+    isSortedByName = prefs.getBool('isSortedByName') ?? false;
+    _isAscending = prefs.getBool('isAscending') ?? true;
     _sortMaps(isSortedByName ? 'name' : 'creation',
         save: false, ascending: _isAscending);
   }
 
   Future<void> _saveSortPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isSortedByName_${widget.tipspageId}', isSortedByName);
-    await prefs.setBool('isAscending_${widget.tipspageId}', _isAscending);
+    await prefs.setBool('isSortedByName', isSortedByName);
+    await prefs.setBool('isAscending', _isAscending);
   }
 
   void _onSortSelected(String criterion) {
@@ -237,8 +238,8 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          MapPage(pageId: _maps[i]['pageId']!), // pageIdを使用
+                      builder: (context) => TipsStartScreen(
+                          tipspageId: _maps[i]['pageId']!), // pageIdを使用
                     ),
                   );
                 },
@@ -256,8 +257,8 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MapPage(
-                            pageId: _maps[i + 1]['pageId']!), // pageIdを使用
+                        builder: (context) => TipsStartScreen(
+                            tipspageId: _maps[i + 1]['pageId']!), // pageIdを使用
                       ),
                     );
                   },
@@ -277,7 +278,7 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 39, 125, 255),
-        title: const Text('Tips'),
+        title: const Text('Game Titles'),
       ),
       body: Column(
         children: [
@@ -330,7 +331,7 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _showAddMapDialog,
-                  child: const Text('Add Tips'),
+                  child: const Text('Add Titles'),
                 ),
               ],
             ),
@@ -344,6 +345,7 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           ),
         ],
       ),
+      drawer: const CustomDrawer(),
     );
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:game_tips_manager/ad_helper.dart';
 import 'package:game_tips_manager/screens/manual.dart';
-import 'package:game_tips_manager/screens/tips_start_screen.dart';
+import 'package:game_tips_manager/screens/tips_start_title_screen.dart';
 import 'package:game_tips_manager/widgets/back_ground.dart';
 import 'package:game_tips_manager/widgets/custom_drawer.dart';
 import 'package:game_tips_manager/widgets/select_button.dart';
@@ -92,7 +92,7 @@ class _StartScreenState extends State<StartScreen> {
                   children: [
                     SelectButton(
                       text: "CreateTips",
-                      destinationPage: TipsStartScreen(),
+                      destinationPage: TipsStartTitleScreen(),
                     ),
                     SizedBox(height: 16), // Spacing between buttons
                     SelectButton(

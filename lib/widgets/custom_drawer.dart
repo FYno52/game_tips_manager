@@ -3,7 +3,7 @@ import 'package:game_tips_manager/screens/manual.dart';
 import 'package:game_tips_manager/screens/privacy_policy_screen.dart';
 import 'package:game_tips_manager/screens/start_screen.dart';
 import 'package:game_tips_manager/screens/terms_of_service_screen.dart';
-import 'package:game_tips_manager/screens/tips_start_screen.dart';
+import 'package:game_tips_manager/screens/tips_start_title_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -45,7 +45,8 @@ class CustomDrawer extends StatelessWidget {
             title: const Text('Create Your Tips'),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const TipsStartScreen()),
+              MaterialPageRoute(
+                  builder: (context) => const TipsStartTitleScreen()),
             ),
           ),
           ListTile(
