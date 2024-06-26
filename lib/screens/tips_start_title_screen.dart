@@ -394,6 +394,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 39, 125, 255),
         title: const Text('Game Titles'),
