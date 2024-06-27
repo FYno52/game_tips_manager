@@ -239,7 +239,7 @@ class _MapPageState extends State<MapPage> {
   Future<Map<String, dynamic>?> _showAddMemoDialog() async {
     TextEditingController titleController = TextEditingController();
     TextEditingController contentController = TextEditingController();
-    String selectedImage = 'assets/images/face_icons/Default_icon.png';
+    String selectedImage = 'assets/images/icons/Default_icon.png';
     File? imageFile;
 
     Future<void> pickImage() async {
@@ -512,21 +512,40 @@ class _MapPageState extends State<MapPage> {
                         width: MediaQuery.of(context).size.width * 0.8,
                         child: ListTile(
                           leading: memo.containsKey('imagePath')
-                              ? Image.asset(
-                                  memo['imagePath'],
-                                  width: 32,
-                                  height: 32,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    // デフォルトのアイコンにフォールバック
-                                    return Image.asset(
-                                      'assets/images/face_icons/Default_icon.png',
+                              ? (memo['imagePath'].startsWith('assets/')
+                                  ? Image.asset(
+                                      memo['imagePath'],
                                       width: 32,
                                       height: 32,
-                                    );
-                                  },
-                                )
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        // デフォルトのアイコンにフォールバック
+                                        return Image.asset(
+                                          'assets/images/icons/Default_icon.png',
+                                          width: 32,
+                                          height: 32,
+                                        );
+                                      },
+                                    )
+                                  : Image.file(
+                                      File(memo['imagePath']),
+                                      width: 32,
+                                      height: 32,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        // デフォルトのアイコンにフォールバック
+                                        return Image.asset(
+                                          'assets/images/icons/Default_icon.png',
+                                          width: 32,
+                                          height: 32,
+                                        );
+                                      },
+                                    ))
                               : Image.asset(
-                                  'assets/images/face_icons/Default_icon.png'),
+                                  'assets/images/icons/Default_icon.png',
+                                  width: 32,
+                                  height: 32,
+                                ),
                           title: Text(memo['title']!),
                           onTap: () {
                             _showMemo(memo);
