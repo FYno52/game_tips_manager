@@ -334,61 +334,38 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
       );
     }
 
-    List<Widget> rows = [];
-    for (int i = 0; i < _maps.length; i += 2) {
-      rows.add(
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onLongPress: () => _showEditMapDialog(i),
-                child: MapSelectButton(
-                  mapName: _maps[i]['mapName'],
-                  imageFile: _maps[i]['imageFile'] != null &&
-                          _maps[i]['imageFile']!.isNotEmpty
-                      ? File(_maps[i]['imageFile']!)
-                      : null,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TipsStartScreen(
-                            tipspageId: _maps[i]['pageId']!), // pageIdを使用
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            if (i + 1 < _maps.length)
-              Expanded(
-                child: GestureDetector(
-                  onLongPress: () => _showEditMapDialog(i + 1),
-                  child: MapSelectButton(
-                    mapName: _maps[i + 1]['mapName'],
-                    imageFile: _maps[i + 1]['imageFile'] != null &&
-                            _maps[i + 1]['imageFile']!.isNotEmpty
-                        ? File(_maps[i + 1]['imageFile']!)
-                        : null,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TipsStartScreen(
-                              tipspageId: _maps[i + 1]['pageId']!), // pageIdを使用
-                        ),
-                      );
-                    },
+    List<Widget> columns = [];
+    for (int i = 0; i < _maps.length; i++) {
+      columns.add(
+        Container(
+          margin: const EdgeInsets.only(bottom: 5), // 各アイテム間にスペースを追加
+          width: double.infinity, // 横幅を画面いっぱいに広げる
+          height: 100, // 必要に応じて高さを調整
+          child: GestureDetector(
+            onLongPress: () => _showEditMapDialog(i),
+            child: MapSelectButton(
+              mapName: _maps[i]['mapName'],
+              imageFile: _maps[i]['imageFile'] != null &&
+                      _maps[i]['imageFile']!.isNotEmpty
+                  ? File(_maps[i]['imageFile']!)
+                  : null,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TipsStartScreen(
+                        tipspageId: _maps[i]['pageId']!), // pageIdを使用
                   ),
-                ),
-              )
-            else
-              Expanded(child: Container()),
-          ],
+                );
+              },
+            ),
+          ),
         ),
       );
     }
-    return Column(children: rows);
+    return Column(
+      children: columns,
+    );
   }
 
   @override
