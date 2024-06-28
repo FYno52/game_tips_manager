@@ -448,7 +448,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
   Widget _buildIntroDialog() {
     return Center(
       child: AlertDialog(
-        title: const Text('Save your tips!'),
+        title: const Text('How to Use This App'),
         content: const IntrinsicHeight(
           child: SingleChildScrollView(
             child: Column(
