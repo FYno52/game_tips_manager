@@ -461,9 +461,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
 
 📝 You can create a list of tips by entering text or a URL.
 
-🔗 Entering a URL will automatically redirect!
-
-⚠️ Please enter only one URL in the content.
+🔗 Entering only a URL will automatically redirect.
 
 Supported URLs:
 🖼️ Images (gif/png/jpg/jpeg)

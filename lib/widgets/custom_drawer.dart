@@ -41,7 +41,7 @@ class CustomDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.fire_extinguisher),
+            leading: const Icon(Icons.tips_and_updates),
             title: const Text('Create Your Tips'),
             onTap: () => Navigator.push(
               context,

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flex_color_picker/flex_color_picker.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:game_tips_manager/ad_helper.dart';
 import 'package:game_tips_manager/widgets/custom_dropdown_button.dart';
@@ -283,7 +284,7 @@ class _MapPageState extends State<MapPage> {
                   controller: contentController,
                   decoration: const InputDecoration(
                       hintText:
-                          'Enter content here.\nIf entering a URL, please use only one.\nIf uploading an image, it will not automatically redirect.'),
+                          'Enter content here.\nIf you wish to be automatically redirected, enter only one URL.'),
                   maxLines: 5,
                 ),
                 const SizedBox(height: 10),
@@ -434,7 +435,7 @@ class _MapPageState extends State<MapPage> {
                   controller: contentController,
                   decoration: const InputDecoration(
                       hintText:
-                          'Enter content here.\nIf entering a URL, please use only one.\nIf uploading an image, it will not automatically redirect.'),
+                          'Enter content here.\nIf you wish to be automatically redirected, enter only one URL.'),
                   maxLines: 5,
                 ),
                 const SizedBox(height: 10),
@@ -546,7 +547,12 @@ class _MapPageState extends State<MapPage> {
                                   width: 32,
                                   height: 32,
                                 ),
-                          title: Text(memo['title']!),
+                          title: Text(
+                            memo['title']!,
+                            style: const TextStyle(
+                              fontSize: 18.0, // お好みのサイズに変更してください
+                            ),
+                          ),
                           onTap: () {
                             _showMemo(memo);
                           },
@@ -654,10 +660,8 @@ class _MapPageState extends State<MapPage> {
                     child: Image.file(File(imageFile)),
                   ),
                 ),
-                const SizedBox(
-                    height:
-                        10), // Add some space between the image and the text
-                Text(content),
+                const SizedBox(height: 10),
+                _buildContentWithLinks(context, content, memo['title']),
               ],
             ),
           ),
@@ -680,7 +684,7 @@ class _MapPageState extends State<MapPage> {
           ),
         ),
       );
-    } else if (content.contains('https://') || content.contains('http//')) {
+    } else if (_isValidUrl(content)) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => WebView(
@@ -697,7 +701,7 @@ class _MapPageState extends State<MapPage> {
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
-              child: Text(content),
+              child: _buildContentWithLinks(context, content, memo['title']),
             ),
           ),
           actions: [
@@ -709,6 +713,78 @@ class _MapPageState extends State<MapPage> {
         ),
       );
     }
+  }
+
+  RichText _buildContentWithLinks(
+      BuildContext context, String text, String title) {
+    final urlRegex = RegExp(
+      r'(https?://[^\s]+)',
+      caseSensitive: false,
+    );
+
+    final matches = urlRegex.allMatches(text);
+
+    if (matches.isEmpty) {
+      return RichText(
+        text: TextSpan(
+          text: text,
+          style: const TextStyle(color: Colors.black, fontSize: 18.0),
+        ),
+      );
+    }
+
+    final spans = <TextSpan>[];
+    int start = 0;
+
+    for (final match in matches) {
+      if (match.start > start) {
+        spans.add(TextSpan(
+          text: text.substring(start, match.start),
+          style: const TextStyle(color: Colors.black, fontSize: 18.0),
+        ));
+      }
+
+      final url = match.group(0)!;
+      spans.add(
+        TextSpan(
+          text: url,
+          style: const TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+              fontSize: 18.0),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              if (_isValidUrl(url)) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => WebView(
+                      url: url,
+                      title: title,
+                    ),
+                  ),
+                );
+              }
+            },
+        ),
+      );
+      start = match.end;
+    }
+
+    if (start < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(start),
+        style: const TextStyle(color: Colors.black, fontSize: 18.0),
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
+    );
+  }
+
+  bool _isValidUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null && (uri.isScheme('http') || uri.isScheme('https'));
   }
 
   void _onTabChanged(int index) {

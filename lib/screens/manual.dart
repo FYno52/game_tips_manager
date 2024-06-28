@@ -32,7 +32,7 @@ class ManualPage extends StatelessWidget {
                   '2. Adding Titles:\nOn the first page, add your favorite titles.',
                   '3. Creating a Tips List:\nOn the Tips page, create a tips list for the selected game.',
                   '4. Using the Tips Page:\nOn the tips page, first add an image.\nTap on the image to create a marker at the selected location.\nTap the created marker to display a list of tips for that location.',
-                  '5. Viewing Details and URL Redirects:\nSelect an item to view details. If you entered a URL, you will be automatically redirected to the website.',
+                  '5. Viewing Details and URL Redirects:\nSelect an item to view details. If you entered only a URL, you will be automatically redirected to the website.',
                   '6. Saving Text Notes:\nYou can also simply enter and save text notes.',
                   '7. Switching Between Tabs:\nSwitch between different tabs to organize your tips based on your needs.',
                   '8. Zooming the Image:\nUse pinch gestures to zoom the image.',
