@@ -28,12 +28,16 @@ class ManualPage extends StatelessWidget {
                 title: 'Create Tips Mode',
                 description: [
                   'Manage your tips efficiently!',
-                  'Tap on the map to create an icon at the selected location.',
-                  'Tap the created icon to display a list of tips for that location.',
-                  'Select an item from the list to view details. If you enter a URL, you will be automatically redirected to the website.',
+                  'On the first page add your favorite titles.',
+                  'On the next page, create a tips list for that game.',
+                  'On the tip page, first add the image.',
+                  'Tap on the image to create a marker at the selected location.',
+                  'Tap the created marker to display a list of tips for that location.',
+                  'Select an item to view details. If you entered a URL, you will be automatically redirected to the website.',
                   'You can also simply enter and save text notes!',
                   'Switch between different tabs to organize your tips based on your needs.',
-                  'Zoom the map using pinch gestures.'
+                  'Zoom the image using pinch gestures.',
+                  'All items can be edited or deleted by long pressing.'
                 ],
               ),
 

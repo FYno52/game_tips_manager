@@ -106,7 +106,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add Tips Page'),
+          title: const Text('Add Title Page'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -114,7 +114,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                 onChanged: (value) {
                   mapName = value;
                 },
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: const InputDecoration(labelText: 'Game Title'),
                 maxLength: 20,
               ),
               ElevatedButton(
@@ -455,9 +455,13 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '''👆 Tap to add an icon at any position on the map.
+                  '''Add your favorite game titles and create your own tips!.
+
+👆 Tap to add an icon at any position on the image.
 
 📝 You can create a list of tips by entering text or a URL.
+
+🔗 Entering a URL will automatically redirect!
 
 ⚠️ Please enter only one URL in the content.
 

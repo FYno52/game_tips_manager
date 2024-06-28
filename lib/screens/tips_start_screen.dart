@@ -19,7 +19,6 @@ class TipsStartScreen extends StatefulWidget {
 }
 
 class _TipsStartScreenState extends State<TipsStartScreen> {
-  bool _showIntro = false;
   BannerAd? _topBannerAd;
   BannerAd? _bottomBannerAd;
   final Uuid _uuid = const Uuid();
@@ -31,22 +30,10 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
   @override
   void initState() {
     super.initState();
-    _checkFirstTime();
     _loadTopBannerAd();
     _loadBottomBannerAd();
     _loadMaps();
     _loadSortPreferences();
-  }
-
-  Future<void> _checkFirstTime() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool hasShownIntro = prefs.getBool('hasShownIntro') ?? false;
-    if (!hasShownIntro) {
-      setState(() {
-        _showIntro = true;
-      });
-      await prefs.setBool('hasShownIntro', true);
-    }
   }
 
   void _loadTopBannerAd() {
@@ -85,12 +72,6 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     ).load();
   }
 
-  void _closeIntroDialog() {
-    setState(() {
-      _showIntro = false;
-    });
-  }
-
   Future<void> _showAddMapDialog() async {
     String mapName = '';
     XFile? imageFile;
@@ -112,7 +93,7 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
                 onChanged: (value) {
                   mapName = value;
                 },
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: const InputDecoration(labelText: 'Tips Title'),
                 maxLength: 20,
               ),
               ElevatedButton(
@@ -417,7 +398,6 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
                     ),
                   ],
                 ),
-                if (_showIntro) _buildIntroDialog(),
               ],
             ),
           ),
@@ -458,49 +438,6 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
             child: _bottomBannerAd != null
                 ? AdWidget(ad: _bottomBannerAd!)
                 : Container(color: Colors.transparent),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIntroDialog() {
-    return Center(
-      child: AlertDialog(
-        title: const Text('Save your tips!'),
-        content: const IntrinsicHeight(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '''👆 Tap to add an icon at any position on the map.
-
-📝 You can create a list of tips by entering text or a URL.
-
-⚠️ Please enter only one URL in the content.
-
-Supported URLs:
-🖼️ Images (gif/png/jpg/jpeg)
-🎥 Videos (mp4/avi/webm)
-📺 YouTube (including shorts)
-🌐 Other Websites
-
-🗑️ Long press the icon to delete it.
-
-🔍 Zoom the map using pinch gestures.
-
-🐔 Enjoy!''',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _closeIntroDialog,
-            child: const Text('Got it'),
           ),
         ],
       ),
