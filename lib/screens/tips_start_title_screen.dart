@@ -87,11 +87,11 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
     ).load();
   }
 
-  void _closeIntroDialog() {
-    setState(() {
-      _showIntro = false;
-    });
-  }
+  // void _closeIntroDialog() {
+  //   setState(() {
+  //     _showIntro = false;
+  //   });
+  // }
 
   Future<void> _showAddMapDialog() async {
     String mapName = '';
@@ -481,8 +481,9 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                     const SizedBox(width: 48), // アイコンのサイズと同じスペースを確保
                   ],
                 ),
+                const SizedBox(height: 8),
                 const Text(
-                  '''Add your favorite game titles and create your own tips!.
+                  '''➕ Add your favorite game titles and create your own tips!.
 
 👆 Tap to add an icon at any position on the image.
 
@@ -496,14 +497,14 @@ Supported URLs:
 📺 YouTube (including shorts)
 🌐 Other Websites
 
-🗑️ Long press the icon to delete it.
+🗑️ Long press to edit or delete all items.
 
-🔍 Zoom the map using pinch gestures.
+🔍 Zoom the image using pinch gestures.
 
 🐔 Enjoy!''',
                   style: TextStyle(fontSize: 18),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _hideIntroContent,
                   child: const Text('Got it'),
