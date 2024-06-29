@@ -397,7 +397,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                     ),
                   ],
                 ),
-                if (_showIntro) _buildIntroDialog(),
+                if (_showIntro) _buildIntroContent(),
               ],
             ),
           ),
@@ -445,16 +445,43 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
     );
   }
 
-  Widget _buildIntroDialog() {
-    return Center(
-      child: AlertDialog(
-        title: const Text('How to Use This App'),
-        content: const IntrinsicHeight(
+  void _hideIntroContent() {
+    setState(() {
+      _showIntro = false;
+    });
+  }
+
+  Widget _buildIntroContent() {
+    return Container(
+      color: Colors.white, // 背景色を設定
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: _hideIntroContent,
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'How to Use This App', // タイトルを追加
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center, // タイトルを中央揃え
+                      ),
+                    ),
+                    const SizedBox(width: 48), // アイコンのサイズと同じスペースを確保
+                  ],
+                ),
+                const Text(
                   '''Add your favorite game titles and create your own tips!.
 
 👆 Tap to add an icon at any position on the image.
@@ -476,16 +503,15 @@ Supported URLs:
 🐔 Enjoy!''',
                   style: TextStyle(fontSize: 18),
                 ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _hideIntroContent,
+                  child: const Text('Got it'),
+                ),
               ],
             ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: _closeIntroDialog,
-            child: const Text('Got it'),
-          ),
-        ],
       ),
     );
   }
