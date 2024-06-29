@@ -344,8 +344,8 @@ class _MapPageState extends State<MapPage> {
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Icon'),
-        content: const Text('Are you sure you want to delete this icon?'),
+        title: const Text('Delete Marker'),
+        content: const Text('Are you sure you want to delete this marker?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

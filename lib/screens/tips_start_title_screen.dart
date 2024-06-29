@@ -485,7 +485,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                 const Text(
                   '''➕ Add your favorite game titles and create your own tips!.
 
-👆 Tap to add an icon at any position on the image.
+👆 Tap to add a marker at any position on the image.
 
 📝 You can create a list of tips by entering text or a URL.
 
