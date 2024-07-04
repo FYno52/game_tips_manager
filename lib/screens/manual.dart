@@ -37,6 +37,7 @@ class ManualPage extends StatelessWidget {
                   '7. Switching Between Tabs:\nSwitch between different tabs to organize your tips based on your needs.',
                   '8. Zooming the Image:\nUse pinch gestures to zoom the image.',
                   '9. Editing and Deleting Items:\nAll items can be edited or deleted by long pressing.',
+                  '10. Sharing Data:\nLong press the title button to export.\nEach title data can be exported and imported. Share with friends and teammates.\nPlease note that uploaded images cannot be shared.',
                 ],
               ),
               // 必要に応じて他のセクションを追加

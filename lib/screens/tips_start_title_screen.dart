@@ -126,26 +126,34 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                final String titlePageId = _uuid.v4();
-                setState(() {
-                  _maps.add({
-                    'pageId': titlePageId,
-                    'mapName': mapName,
-                    'imageFile': imageFile?.path,
-                  });
-                });
-                _saveMaps(); // Save maps immediately after adding
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 16), // ここで隙間を広げます
+                  TextButton(
+                    onPressed: () {
+                      final String titlePageId = _uuid.v4();
+                      setState(() {
+                        _maps.add({
+                          'pageId': titlePageId,
+                          'mapName': mapName,
+                          'imageFile': imageFile?.path,
+                        });
+                      });
+                      _saveMaps(); // Save maps immediately after adding
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Add'),
+                  ),
+                ],
+              ),
             ),
           ],
         );
@@ -296,7 +304,7 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
       final bool confirmed = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Enter File Name'),
+              title: const Text('Export This Title File'),
               content: TextField(
                 controller: fileNameController,
                 decoration: const InputDecoration(hintText: 'Enter file name'),
@@ -347,39 +355,76 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _maps[index]['mapName'] = mapName;
-                  if (imageFile != null) {
-                    _maps[index]['imageFile'] = imageFile?.path;
-                  }
-                });
-                _saveMaps(); // Save maps immediately after editing
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-            TextButton(
-              onPressed: () {
-                deleteMapData(_maps[index]['pageId']!);
-                setState(() {
-                  _maps.removeAt(index);
-                });
-                _saveMaps();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Delete'),
-            ),
-            TextButton(
-              onPressed: _requestExportFileName,
-              child: const Text('Export'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.file_download),
+                  onPressed: _requestExportFileName,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final bool? confirmDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Confirm Delete'),
+                              content: const Text(
+                                  'Are you sure you want to delete this title file?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true);
+                                  },
+                                  child: const Text('Delete'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        if (confirmDelete == true) {
+                          deleteMapData(_maps[index]['pageId']!);
+                          setState(() {
+                            _maps.removeAt(index);
+                          });
+                          _saveMaps();
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      child: const Text('Delete'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _maps[index]['mapName'] = mapName;
+                          if (imageFile != null) {
+                            _maps[index]['imageFile'] = imageFile?.path;
+                          }
+                        });
+                        _saveMaps(); // Save maps immediately after editing
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         );
@@ -500,13 +545,13 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _showAddMapDialog,
-                  child: const Text('Add Titles'),
+                  onPressed: _importData,
+                  child: const Text('Import Data'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _importData,
-                  child: const Text('Import Data'),
+                  onPressed: _showAddMapDialog,
+                  child: const Text('Add Titles'),
                 ),
               ],
             ),
@@ -580,6 +625,8 @@ Supported URLs:
 
 🔍 Zoom the image using pinch gestures.
 
+📤 Share tips data with friends.
+
 🐔 Enjoy!''',
                   style: TextStyle(fontSize: 18),
                 ),
@@ -597,158 +644,158 @@ Supported URLs:
   }
   // データをエクスポート・インポートする関数
 
-  Future<void> _confirmExport() async {
-    final bool shouldExport = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Confirm Export'),
-            content:
-                const Text('Are you sure you want to export the current data?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Export'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+  // Future<void> _confirmExport() async {
+  //   final bool shouldExport = await showDialog<bool>(
+  //         context: context,
+  //         builder: (context) => AlertDialog(
+  //           title: const Text('Confirm Export'),
+  //           content:
+  //               const Text('Are you sure you want to export the current data?'),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(false),
+  //               child: const Text('Cancel'),
+  //             ),
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(true),
+  //               child: const Text('Export'),
+  //             ),
+  //           ],
+  //         ),
+  //       ) ??
+  //       false;
 
-    if (shouldExport) {
-      await _requestExportFileName();
-    }
-  }
+  //   if (shouldExport) {
+  //     await _requestExportFileName();
+  //   }
+  // }
 
-  Future<void> _requestExportFileName() async {
-    final TextEditingController fileNameController = TextEditingController();
+  // Future<void> _requestExportFileName() async {
+  //   final TextEditingController fileNameController = TextEditingController();
 
-    final bool confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Enter File Name'),
-            content: TextField(
-              controller: fileNameController,
-              decoration: const InputDecoration(hintText: 'Enter file name'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Save'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+  //   final bool confirmed = await showDialog<bool>(
+  //         context: context,
+  //         builder: (context) => AlertDialog(
+  //           title: const Text('Export This Title File'),
+  //           content: TextField(
+  //             controller: fileNameController,
+  //             decoration: const InputDecoration(hintText: 'Enter file name'),
+  //           ),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(false),
+  //               child: const Text('Cancel'),
+  //             ),
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(true),
+  //               child: const Text('Save'),
+  //             ),
+  //           ],
+  //         ),
+  //       ) ??
+  //       false;
 
-    if (confirmed && fileNameController.text.isNotEmpty) {
-      await _exportData(fileNameController.text);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File name cannot be empty')),
-      );
-    }
-  }
+  //   if (confirmed && fileNameController.text.isNotEmpty) {
+  //     await _exportData(fileNameController.text);
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('File name cannot be empty')),
+  //     );
+  //   }
+  // }
 
-  Future<void> _exportData(String fileName) async {
-    await _requestStoragePermission();
-    final status = await Permission.storage.status;
-    if (status.isGranted) {
-      try {
-        final result = await FilePicker.platform.getDirectoryPath();
-        if (result != null) {
-          String path = '$result/$fileName.json';
-          int count = 1;
-          while (File(path).existsSync()) {
-            path = '$result/$fileName($count).json';
-            count++;
-          }
-          final file = File(path);
-          await file.writeAsString(jsonEncode(_maps));
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Data exported successfully to $path')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to get export directory')),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to export data: ${e.toString()}')),
-        );
-      }
-    } else {
-      final shouldOpenSettings = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Storage Permission Required'),
-              content: const Text(
-                  'Storage permission is required to export data. Please grant the permission.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Grant Permission'),
-                ),
-              ],
-            ),
-          ) ??
-          false;
+  // Future<void> _exportData(String fileName) async {
+  //   await _requestStoragePermission();
+  //   final status = await Permission.storage.status;
+  //   if (status.isGranted) {
+  //     try {
+  //       final result = await FilePicker.platform.getDirectoryPath();
+  //       if (result != null) {
+  //         String path = '$result/$fileName.json';
+  //         int count = 1;
+  //         while (File(path).existsSync()) {
+  //           path = '$result/$fileName($count).json';
+  //           count++;
+  //         }
+  //         final file = File(path);
+  //         await file.writeAsString(jsonEncode(_maps));
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(content: Text('Data exported successfully to $path')),
+  //         );
+  //       } else {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(content: Text('Failed to get export directory')),
+  //         );
+  //       }
+  //     } catch (e) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Failed to export data: ${e.toString()}')),
+  //       );
+  //     }
+  //   } else {
+  //     final shouldOpenSettings = await showDialog<bool>(
+  //           context: context,
+  //           builder: (context) => AlertDialog(
+  //             title: const Text('Storage Permission Required'),
+  //             content: const Text(
+  //                 'Storage permission is required to export data. Please grant the permission.'),
+  //             actions: [
+  //               TextButton(
+  //                 onPressed: () => Navigator.of(context).pop(false),
+  //                 child: const Text('Cancel'),
+  //               ),
+  //               TextButton(
+  //                 onPressed: () => Navigator.of(context).pop(true),
+  //                 child: const Text('Grant Permission'),
+  //               ),
+  //             ],
+  //           ),
+  //         ) ??
+  //         false;
 
-      if (shouldOpenSettings) {
-        openAppSettings();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Storage permission denied')),
-        );
-      }
-    }
-  }
+  //     if (shouldOpenSettings) {
+  //       openAppSettings();
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Storage permission denied')),
+  //       );
+  //     }
+  //   }
+  // }
 
-  Future<void> _confirmImport(String path) async {
-    final bool shouldImport = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Confirm Import'),
-            content: const Text(
-                'Importing will overwrite your current data. Do you want to continue?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Continue'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+  // Future<void> _confirmImport(String path) async {
+  //   final bool shouldImport = await showDialog<bool>(
+  //         context: context,
+  //         builder: (context) => AlertDialog(
+  //           title: const Text('Confirm Import'),
+  //           content: const Text(
+  //               'Importing will overwrite your current data. Do you want to continue?'),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(false),
+  //               child: const Text('Cancel'),
+  //             ),
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(true),
+  //               child: const Text('Continue'),
+  //             ),
+  //           ],
+  //         ),
+  //       ) ??
+  //       false;
 
-    if (shouldImport) {
-      final file = File(path);
-      final data = jsonDecode(await file.readAsString());
-      setState(() {
-        _maps = List<Map<String, String?>>.from(data);
-      });
-      _saveMaps();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Data imported successfully from ${file.path}')),
-      );
-    }
-  }
+  //   if (shouldImport) {
+  //     final file = File(path);
+  //     final data = jsonDecode(await file.readAsString());
+  //     setState(() {
+  //       _maps = List<Map<String, String?>>.from(data);
+  //     });
+  //     _saveMaps();
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Data imported successfully from ${file.path}')),
+  //     );
+  //   }
+  // }
 
   Future<void> _importData() async {
     try {

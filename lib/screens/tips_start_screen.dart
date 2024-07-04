@@ -103,26 +103,34 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                final String pageId = _uuid.v4();
-                setState(() {
-                  _maps.add({
-                    'pageId': pageId,
-                    'mapName': mapName,
-                    'imageFile': imageFile?.path,
-                  });
-                });
-                _saveMaps(); // Save maps immediately after adding
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 16), // ボタン間の隙間を広げます
+                  TextButton(
+                    onPressed: () {
+                      final String pageId = _uuid.v4();
+                      setState(() {
+                        _maps.add({
+                          'pageId': pageId,
+                          'mapName': mapName,
+                          'imageFile': imageFile?.path,
+                        });
+                      });
+                      _saveMaps(); // 追加後すぐに保存します
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Add'),
+                  ),
+                ],
+              ),
             ),
           ],
         );
@@ -233,20 +241,6 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                setState(() {
-                  _maps[index] = {
-                    'pageId': _maps[index]['pageId'],
-                    'mapName': mapName,
-                    'imageFile': imageFile?.path ?? _maps[index]['imageFile'],
-                  };
-                });
-                _saveMaps(); // Save maps immediately after editing
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-            TextButton(
-              onPressed: () {
                 Navigator.of(context).pop();
               },
               child: const Text('Cancel'),
@@ -288,6 +282,20 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
                 }
               },
               child: const Text('Delete'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _maps[index] = {
+                    'pageId': _maps[index]['pageId'],
+                    'mapName': mapName,
+                    'imageFile': imageFile?.path ?? _maps[index]['imageFile'],
+                  };
+                });
+                _saveMaps(); // Save maps immediately after editing
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
             ),
           ],
         );
