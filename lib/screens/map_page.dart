@@ -371,12 +371,12 @@ class _MapPageState extends State<MapPage> {
         content: const Text('Are you sure you want to delete?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Delete'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
           ),
         ],
       ),
