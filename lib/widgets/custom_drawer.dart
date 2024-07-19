@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:game_tips_manager/screens/manual.dart';
 import 'package:game_tips_manager/screens/privacy_policy_screen.dart';
-import 'package:game_tips_manager/screens/start_screen.dart';
 import 'package:game_tips_manager/screens/terms_of_service_screen.dart';
 import 'package:game_tips_manager/screens/tips_start_title_screen.dart';
+import 'package:game_tips_manager/screens/tutorial_page.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -33,20 +33,20 @@ class CustomDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Home'),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const StartScreen()),
-            ),
-          ),
-          ListTile(
             leading: const Icon(Icons.tips_and_updates),
             title: const Text('Create Your Tips'),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (context) => const TipsStartTitleScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.slideshow),
+            title: const Text('Tutorial Slide'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const TutorialPage()),
             ),
           ),
           ListTile(

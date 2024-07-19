@@ -5,6 +5,7 @@ import 'package:game_tips_manager/screens/map_page.dart';
 import 'package:game_tips_manager/widgets/back_ground.dart';
 import 'package:game_tips_manager/widgets/map_select_button.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -20,7 +21,7 @@ class TipsStartScreen extends StatefulWidget {
 
 class _TipsStartScreenState extends State<TipsStartScreen> {
   BannerAd? _topBannerAd;
-  BannerAd? _bottomBannerAd;
+  // BannerAd? _bottomBannerAd;
   final Uuid _uuid = const Uuid();
   bool isSortedByName = false;
   bool _isAscending = true;
@@ -31,14 +32,14 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
   void initState() {
     super.initState();
     _loadTopBannerAd();
-    _loadBottomBannerAd();
+    // _loadBottomBannerAd();
     _loadMaps();
     _loadSortPreferences();
   }
 
   void _loadTopBannerAd() {
     BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
+      adUnitId: AdHelper.tipsSelectBannerAdUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -54,22 +55,29 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     ).load();
   }
 
-  void _loadBottomBannerAd() {
-    BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {
-            _bottomBannerAd = ad as BannerAd;
-          });
-        },
-        onAdFailedToLoad: (ad, err) {
-          ad.dispose();
-        },
-      ),
-    ).load();
+  // void _loadBottomBannerAd() {
+  //   BannerAd(
+  //     adUnitId: AdHelper.bannerAdUnitId,
+  //     request: const AdRequest(),
+  //     size: AdSize.banner,
+  //     listener: BannerAdListener(
+  //       onAdLoaded: (ad) {
+  //         setState(() {
+  //           _bottomBannerAd = ad as BannerAd;
+  //         });
+  //       },
+  //       onAdFailedToLoad: (ad, err) {
+  //         ad.dispose();
+  //       },
+  //     ),
+  //   ).load();
+  // }
+
+  Future<String> _saveImageToFile(XFile image) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final imagePath = '${directory.path}/${_uuid.v4()}.png';
+    final File newImage = await File(image.path).copy(imagePath);
+    return newImage.path;
   }
 
   Future<void> _showAddMapDialog() async {
@@ -78,7 +86,15 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
 
     Future<void> _pickImage() async {
       final ImagePicker picker = ImagePicker();
-      imageFile = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile =
+          await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        final String savedPath = await _saveImageToFile(pickedFile);
+        setState(() {
+          imageFile = XFile(savedPath);
+        });
+      }
     }
 
     showDialog(
@@ -208,7 +224,15 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
 
     Future<void> pickImage() async {
       final ImagePicker picker = ImagePicker();
-      imageFile = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile =
+          await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        final String savedPath = await _saveImageToFile(pickedFile);
+        setState(() {
+          imageFile = XFile(savedPath);
+        });
+      }
     }
 
     Future<void> deleteMapData(String pageId) async {
@@ -257,15 +281,15 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).pop(true);
-                          },
-                          child: const Text('Delete'),
-                        ),
-                        TextButton(
-                          onPressed: () {
                             Navigator.of(context).pop(false);
                           },
                           child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          child: const Text('Delete'),
                         ),
                       ],
                     );
@@ -306,7 +330,7 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
   @override
   void dispose() {
     _topBannerAd?.dispose();
-    _bottomBannerAd?.dispose();
+    // _bottomBannerAd?.dispose();
     super.dispose();
   }
 
@@ -440,13 +464,13 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
               ],
             ),
           ),
-          SizedBox(
-            width: AdSize.banner.width.toDouble(),
-            height: AdSize.banner.height.toDouble(),
-            child: _bottomBannerAd != null
-                ? AdWidget(ad: _bottomBannerAd!)
-                : Container(color: Colors.transparent),
-          ),
+          // SizedBox(
+          //   width: AdSize.banner.width.toDouble(),
+          //   height: AdSize.banner.height.toDouble(),
+          //   child: _bottomBannerAd != null
+          //       ? AdWidget(ad: _bottomBannerAd!)
+          //       : Container(color: Colors.transparent),
+          // ),
         ],
       ),
     );

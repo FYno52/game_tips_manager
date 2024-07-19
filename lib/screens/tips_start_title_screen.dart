@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
+// import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:game_tips_manager/ad_helper.dart';
 import 'package:game_tips_manager/screens/tips_start_screen.dart';
@@ -7,7 +7,8 @@ import 'package:game_tips_manager/widgets/back_ground.dart';
 import 'package:game_tips_manager/widgets/custom_drawer.dart';
 import 'package:game_tips_manager/widgets/map_select_button.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+// import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -23,9 +24,7 @@ class TipsStartTitleScreen extends StatefulWidget {
 }
 
 class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
-  bool _showIntro = false;
   BannerAd? _topBannerAd;
-  BannerAd? _bottomBannerAd;
   final Uuid _uuid = const Uuid();
   bool isSortedByName = false;
   bool _isAscending = true;
@@ -35,27 +34,14 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
   @override
   void initState() {
     super.initState();
-    _checkFirstTime();
     _loadTopBannerAd();
-    _loadBottomBannerAd();
     _loadMaps();
     _loadSortPreferences();
   }
 
-  Future<void> _checkFirstTime() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool hasShownIntro = prefs.getBool('hasShownIntro') ?? false;
-    if (!hasShownIntro) {
-      setState(() {
-        _showIntro = true;
-      });
-      await prefs.setBool('hasShownIntro', true);
-    }
-  }
-
   void _loadTopBannerAd() {
     BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
+      adUnitId: AdHelper.titlesBannerAdUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -71,29 +57,12 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
     ).load();
   }
 
-  void _loadBottomBannerAd() {
-    BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {
-            _bottomBannerAd = ad as BannerAd;
-          });
-        },
-        onAdFailedToLoad: (ad, err) {
-          ad.dispose();
-        },
-      ),
-    ).load();
+  Future<String> _saveImageToFile(XFile image) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final imagePath = '${directory.path}/${_uuid.v4()}.png';
+    final File newImage = await File(image.path).copy(imagePath);
+    return newImage.path;
   }
-
-  // void _closeIntroDialog() {
-  //   setState(() {
-  //     _showIntro = false;
-  //   });
-  // }
 
   Future<void> _showAddMapDialog() async {
     String mapName = '';
@@ -101,7 +70,15 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
 
     Future<void> _pickImage() async {
       final ImagePicker picker = ImagePicker();
-      imageFile = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile =
+          await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        final String savedPath = await _saveImageToFile(pickedFile);
+        setState(() {
+          imageFile = XFile(savedPath);
+        });
+      }
     }
 
     showDialog(
@@ -230,7 +207,15 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
 
     Future<void> pickImage() async {
       final ImagePicker picker = ImagePicker();
-      imageFile = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile =
+          await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        final String savedPath = await _saveImageToFile(pickedFile);
+        setState(() {
+          imageFile = XFile(savedPath);
+        });
+      }
     }
 
     Future<void> deleteMapData(String pageId) async {
@@ -238,99 +223,115 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
       await prefs.remove(pageId);
     }
 
-    Future<void> _exportMapData(String fileName) async {
-      await _requestStoragePermission();
-      final status = await Permission.storage.status;
-      if (status.isGranted) {
-        try {
-          final result = await FilePicker.platform.getDirectoryPath();
-          if (result != null) {
-            String path = '$result/$fileName.json';
-            int count = 1;
-            while (File(path).existsSync()) {
-              path = '$result/$fileName($count).json';
-              count++;
-            }
-            final file = File(path);
-            final exportData = _maps[index];
-            await file.writeAsString(jsonEncode(exportData));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Data exported successfully to $path')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to get export directory')),
-            );
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to export data: ${e.toString()}')),
-          );
-        }
-      } else {
-        final shouldOpenSettings = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Storage Permission Required'),
-                content: const Text(
-                    'Storage permission is required to export data. Please grant the permission.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Grant Permission'),
-                  ),
-                ],
-              ),
-            ) ??
-            false;
+    // Future<Map<String, dynamic>> _loadTipsData(String pageId) async {
+    //   // TipsStartScreen に関連するデータを取得するための関数
+    //   SharedPreferences prefs = await SharedPreferences.getInstance();
+    //   String? tipsJson = prefs.getString(pageId);
+    //   if (tipsJson != null) {
+    //     return jsonDecode(tipsJson);
+    //   }
+    //   return {};
+    // }
 
-        if (shouldOpenSettings) {
-          openAppSettings();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Storage permission denied')),
-          );
-        }
-      }
-    }
+    // Future<void> _exportMapData(String fileName) async {
+    //   await _requestStoragePermission();
+    //   final status = await Permission.storage.status;
+    //   if (status.isGranted) {
+    //     try {
+    //       final result = await FilePicker.platform.getDirectoryPath();
+    //       if (result != null) {
+    //         String path = '$result/$fileName.json';
+    //         int count = 1;
+    //         while (File(path).existsSync()) {
+    //           path = '$result/$fileName($count).json';
+    //           count++;
+    //         }
+    //         final file = File(path);
+    //         final exportData = Map<String, dynamic>.from(
+    //             _maps[index]); // 型をMap<String, dynamic>に変換
 
-    Future<void> _requestExportFileName() async {
-      final TextEditingController fileNameController = TextEditingController();
+    //         // 各タイトルページのデータに関連する TipsStartScreen のデータを追加
+    //         final tipsData = await _loadTipsData(exportData['pageId']!);
+    //         exportData['tipsData'] = tipsData;
 
-      final bool confirmed = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Export This Title File'),
-              content: TextField(
-                controller: fileNameController,
-                decoration: const InputDecoration(hintText: 'Enter file name'),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Save'),
-                ),
-              ],
-            ),
-          ) ??
-          false;
+    //         await file.writeAsString(jsonEncode(exportData));
+    //         ScaffoldMessenger.of(context).showSnackBar(
+    //           SnackBar(content: Text('Data exported successfully to $path')),
+    //         );
+    //       } else {
+    //         ScaffoldMessenger.of(context).showSnackBar(
+    //           const SnackBar(content: Text('Failed to get export directory')),
+    //         );
+    //       }
+    //     } catch (e) {
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(content: Text('Failed to export data: ${e.toString()}')),
+    //       );
+    //     }
+    //   } else {
+    //     final shouldOpenSettings = await showDialog<bool>(
+    //           context: context,
+    //           builder: (context) => AlertDialog(
+    //             title: const Text('Storage Permission Required'),
+    //             content: const Text(
+    //                 'Storage permission is required to export data. Please grant the permission.'),
+    //             actions: [
+    //               TextButton(
+    //                 onPressed: () => Navigator.of(context).pop(false),
+    //                 child: const Text('Cancel'),
+    //               ),
+    //               TextButton(
+    //                 onPressed: () => Navigator.of(context).pop(true),
+    //                 child: const Text('Grant Permission'),
+    //               ),
+    //             ],
+    //           ),
+    //         ) ??
+    //         false;
 
-      if (confirmed && fileNameController.text.isNotEmpty) {
-        await _exportMapData(fileNameController.text);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File name cannot be empty')),
-        );
-      }
-    }
+    //     if (shouldOpenSettings) {
+    //       openAppSettings();
+    //     } else {
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         const SnackBar(content: Text('Storage permission denied')),
+    //       );
+    //     }
+    //   }
+    // }
+
+    // Future<void> _requestExportFileName() async {
+    //   final TextEditingController fileNameController = TextEditingController();
+
+    //   final bool confirmed = await showDialog<bool>(
+    //         context: context,
+    //         builder: (context) => AlertDialog(
+    //           title: const Text('Export This Title File'),
+    //           content: TextField(
+    //             controller: fileNameController,
+    //             decoration: const InputDecoration(hintText: 'Enter file name'),
+    //           ),
+    //           actions: [
+    //             TextButton(
+    //               onPressed: () => Navigator.of(context).pop(false),
+    //               child: const Text('Cancel'),
+    //             ),
+    //             TextButton(
+    //               onPressed: () => Navigator.of(context).pop(true),
+    //               child: const Text('Save'),
+    //             ),
+    //           ],
+    //         ),
+    //       ) ??
+    //       false;
+
+    //   if (confirmed && fileNameController.text.isNotEmpty) {
+    //     await _exportMapData(fileNameController.text);
+    //   } else {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       const SnackBar(content: Text('File name cannot be empty')),
+    //     );
+    //   }
+    // }
 
     showDialog(
       context: context,
@@ -358,10 +359,10 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.file_download),
-                  onPressed: _requestExportFileName,
-                ),
+                // IconButton(
+                //   icon: const Icon(Icons.file_download),
+                //   onPressed: _requestExportFileName,
+                // ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -383,15 +384,15 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                               actions: [
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.of(context).pop(true);
-                                  },
-                                  child: const Text('Delete'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
                                     Navigator.of(context).pop(false);
                                   },
                                   child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true);
+                                  },
+                                  child: const Text('Delete'),
                                 ),
                               ],
                             );
@@ -432,14 +433,14 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
     );
   }
 
-  Future<void> _requestStoragePermission() async {
-    await Permission.storage.request();
-  }
+  // Future<void> _requestStoragePermission() async {
+  //   await Permission.storage.request();
+  // }
 
   @override
   void dispose() {
     _topBannerAd?.dispose();
-    _bottomBannerAd?.dispose();
+    // _bottomBannerAd?.dispose();
     super.dispose();
   }
 
@@ -516,7 +517,6 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                     ),
                   ],
                 ),
-                if (_showIntro) _buildIntroContent(),
               ],
             ),
           ),
@@ -543,12 +543,12 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
                   },
                   icon: const Icon(Icons.sort),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _importData,
-                  child: const Text('Import Data'),
-                ),
-                const SizedBox(width: 8),
+                // const SizedBox(width: 8),
+                // ElevatedButton(
+                //   onPressed: _importMapData,
+                //   child: const Text('Import Data'),
+                // ),
+                // const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _showAddMapDialog,
                   child: const Text('Add Titles'),
@@ -556,180 +556,59 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
               ],
             ),
           ),
-          SizedBox(
-            width: AdSize.banner.width.toDouble(),
-            height: AdSize.banner.height.toDouble(),
-            child: _bottomBannerAd != null
-                ? AdWidget(ad: _bottomBannerAd!)
-                : Container(color: Colors.transparent),
-          ),
         ],
       ),
       drawer: const CustomDrawer(),
     );
   }
 
-  void _hideIntroContent() {
-    setState(() {
-      _showIntro = false;
-    });
-  }
-
-  Widget _buildIntroContent() {
-    return Container(
-      color: Colors.white, // 背景色を設定
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: _hideIntroContent,
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'How to Use This App', // タイトルを追加
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center, // タイトルを中央揃え
-                      ),
-                    ),
-                    const SizedBox(width: 48), // アイコンのサイズと同じスペースを確保
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '''➕ Add your favorite game titles and create your own tips!.
-
-👆 Tap to add a marker at any position on the image.
-
-📝 You can create a list of tips by entering text or a URL.
-
-🔗 Entering only a URL will automatically redirect.
-
-Supported URLs:
-🖼️ Images (gif/png/jpg/jpeg)
-🎥 Videos (mp4/avi/webm)
-📺 YouTube (including shorts)
-🌐 Other Websites
-
-🗑️ Long press to edit or delete all items.
-
-🔍 Zoom the image using pinch gestures.
-
-📤 Share tips data with friends.
-
-🐔 Enjoy!''',
-                  style: TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _hideIntroContent,
-                  child: const Text('Got it'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
   // データをエクスポート・インポートする関数
 
-  // Future<void> _confirmExport() async {
-  //   final bool shouldExport = await showDialog<bool>(
-  //         context: context,
-  //         builder: (context) => AlertDialog(
-  //           title: const Text('Confirm Export'),
-  //           content:
-  //               const Text('Are you sure you want to export the current data?'),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () => Navigator.of(context).pop(false),
-  //               child: const Text('Cancel'),
-  //             ),
-  //             TextButton(
-  //               onPressed: () => Navigator.of(context).pop(true),
-  //               child: const Text('Export'),
-  //             ),
-  //           ],
-  //         ),
-  //       ) ??
-  //       false;
-
-  //   if (shouldExport) {
-  //     await _requestExportFileName();
-  //   }
-  // }
-
-  // Future<void> _requestExportFileName() async {
-  //   final TextEditingController fileNameController = TextEditingController();
-
-  //   final bool confirmed = await showDialog<bool>(
-  //         context: context,
-  //         builder: (context) => AlertDialog(
-  //           title: const Text('Export This Title File'),
-  //           content: TextField(
-  //             controller: fileNameController,
-  //             decoration: const InputDecoration(hintText: 'Enter file name'),
-  //           ),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () => Navigator.of(context).pop(false),
-  //               child: const Text('Cancel'),
-  //             ),
-  //             TextButton(
-  //               onPressed: () => Navigator.of(context).pop(true),
-  //               child: const Text('Save'),
-  //             ),
-  //           ],
-  //         ),
-  //       ) ??
-  //       false;
-
-  //   if (confirmed && fileNameController.text.isNotEmpty) {
-  //     await _exportData(fileNameController.text);
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('File name cannot be empty')),
-  //     );
-  //   }
-  // }
-
-  // Future<void> _exportData(String fileName) async {
+  // Future<void> _importMapData() async {
   //   await _requestStoragePermission();
   //   final status = await Permission.storage.status;
   //   if (status.isGranted) {
   //     try {
-  //       final result = await FilePicker.platform.getDirectoryPath();
-  //       if (result != null) {
-  //         String path = '$result/$fileName.json';
-  //         int count = 1;
-  //         while (File(path).existsSync()) {
-  //           path = '$result/$fileName($count).json';
-  //           count++;
-  //         }
+  //       final result = await FilePicker.platform
+  //           .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+  //       if (result != null && result.files.single.path != null) {
+  //         final path = result.files.single.path!;
   //         final file = File(path);
-  //         await file.writeAsString(jsonEncode(_maps));
+  //         final contents = await file.readAsString();
+  //         final Map<String, dynamic> jsonData = jsonDecode(contents);
+
+  //         // jsonDataをMap<String, String?>に変換
+  //         final Map<String, String?> importedData = jsonData.map((key, value) {
+  //           if (value is String || value == null) {
+  //             return MapEntry(key, value);
+  //           } else {
+  //             return MapEntry(key, value.toString());
+  //           }
+  //         });
+
+  //         // インポートしたデータを利用する
+  //         setState(() {
+  //           _maps.add(importedData);
+  //         });
+
+  //         // TipsDataのインポート
+  //         if (jsonData['tipsData'] != null) {
+  //           SharedPreferences prefs = await SharedPreferences.getInstance();
+  //           await prefs.setString(
+  //               importedData['pageId']!, jsonEncode(jsonData['tipsData']));
+  //         }
+
   //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(content: Text('Data exported successfully to $path')),
+  //           const SnackBar(content: Text('Data imported successfully')),
   //         );
   //       } else {
   //         ScaffoldMessenger.of(context).showSnackBar(
-  //           const SnackBar(content: Text('Failed to get export directory')),
+  //           const SnackBar(content: Text('Failed to pick a file')),
   //         );
   //       }
   //     } catch (e) {
   //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Failed to export data: ${e.toString()}')),
+  //         SnackBar(content: Text('Failed to import data: ${e.toString()}')),
   //       );
   //     }
   //   } else {
@@ -738,7 +617,7 @@ Supported URLs:
   //           builder: (context) => AlertDialog(
   //             title: const Text('Storage Permission Required'),
   //             content: const Text(
-  //                 'Storage permission is required to export data. Please grant the permission.'),
+  //                 'Storage permission is required to import data. Please grant the permission.'),
   //             actions: [
   //               TextButton(
   //                 onPressed: () => Navigator.of(context).pop(false),
@@ -762,77 +641,4 @@ Supported URLs:
   //     }
   //   }
   // }
-
-  // Future<void> _confirmImport(String path) async {
-  //   final bool shouldImport = await showDialog<bool>(
-  //         context: context,
-  //         builder: (context) => AlertDialog(
-  //           title: const Text('Confirm Import'),
-  //           content: const Text(
-  //               'Importing will overwrite your current data. Do you want to continue?'),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () => Navigator.of(context).pop(false),
-  //               child: const Text('Cancel'),
-  //             ),
-  //             TextButton(
-  //               onPressed: () => Navigator.of(context).pop(true),
-  //               child: const Text('Continue'),
-  //             ),
-  //           ],
-  //         ),
-  //       ) ??
-  //       false;
-
-  //   if (shouldImport) {
-  //     final file = File(path);
-  //     final data = jsonDecode(await file.readAsString());
-  //     setState(() {
-  //       _maps = List<Map<String, String?>>.from(data);
-  //     });
-  //     _saveMaps();
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Data imported successfully from ${file.path}')),
-  //     );
-  //   }
-  // }
-
-  Future<void> _importData() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-      );
-
-      if (result != null && result.files.single.path != null) {
-        String? path = result.files.single.path;
-        if (path != null && await File(path).exists()) {
-          String jsonData = await File(path).readAsString();
-          Map<String, dynamic> importMap = json.decode(jsonData);
-
-          // マップデータに追加する
-          setState(() {
-            _maps.add(Map<String, String?>.from(importMap));
-          });
-
-          _saveMaps(); // 保存
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Data imported successfully from $path')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File does not exist')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No file selected')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to import data: ${e.toString()}')),
-      );
-    }
-  }
 }

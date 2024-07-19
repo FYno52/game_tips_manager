@@ -46,8 +46,9 @@ class _MapPageState extends State<MapPage> {
   Color _backgroundColor = const Color.fromARGB(255, 0, 0, 0);
 
   BannerAd? _topBannerAd;
-  BannerAd? _bottomBannerAd;
   BannerAd? _memoListBannerAd;
+  NativeAd? _nativeAd;
+  bool _isNativeAdLoaded = false;
 
   @override
   void initState() {
@@ -55,8 +56,9 @@ class _MapPageState extends State<MapPage> {
     _loadIcons();
     _loadImagePath();
     _loadTopBannerAd();
-    _loadBottomBannerAd();
+    // _loadBottomBannerAd();
     _loadMemoListBannerAd();
+    _loadNativeAd();
     _loadIconColor();
     _loadBackgroundColor();
   }
@@ -348,12 +350,12 @@ class _MapPageState extends State<MapPage> {
         content: const Text('Are you sure you want to delete this marker?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-          TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -371,12 +373,12 @@ class _MapPageState extends State<MapPage> {
         content: const Text('Are you sure you want to delete?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-          TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -435,7 +437,7 @@ class _MapPageState extends State<MapPage> {
                   controller: contentController,
                   decoration: const InputDecoration(
                       hintText:
-                          'Enter content here.\nIf you wish to be automatically redirected, enter only one URL.'),
+                          'Enter content here.\nIf you want to be automatically redirected, please enter only one URL.'),
                   maxLines: 5,
                 ),
                 const SizedBox(height: 10),
@@ -493,7 +495,7 @@ class _MapPageState extends State<MapPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return FractionallySizedBox(
-            heightFactor: 0.8, // 高さを画面の80%に設定
+            heightFactor: 0.85,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -506,93 +508,107 @@ class _MapPageState extends State<MapPage> {
                 Expanded(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    itemCount: memos.length,
+                    itemCount: memos.isEmpty
+                        ? 1
+                        : memos.length + (_isNativeAdLoaded ? 1 : 0),
                     itemBuilder: (context, index) {
-                      Map<String, dynamic> memo = memos[index];
-                      return SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.8,
-                        child: ListTile(
-                          leading: memo.containsKey('imagePath')
-                              ? (memo['imagePath'].startsWith('assets/')
-                                  ? Image.asset(
-                                      memo['imagePath'],
-                                      width: 32,
-                                      height: 32,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        // デフォルトのアイコンにフォールバック
-                                        return Image.asset(
-                                          'assets/images/icons/Default_icon.png',
-                                          width: 32,
-                                          height: 32,
-                                        );
-                                      },
-                                    )
-                                  : Image.file(
-                                      File(memo['imagePath']),
-                                      width: 32,
-                                      height: 32,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        // デフォルトのアイコンにフォールバック
-                                        return Image.asset(
-                                          'assets/images/icons/Default_icon.png',
-                                          width: 32,
-                                          height: 32,
-                                        );
-                                      },
-                                    ))
-                              : Image.asset(
-                                  'assets/images/icons/Default_icon.png',
-                                  width: 32,
-                                  height: 32,
+                      if (memos.isEmpty) {
+                        return const Center(child: Text('No memos available.'));
+                      } else if (_isNativeAdLoaded && index == 1) {
+                        return Container(
+                          height: 90,
+                          padding: const EdgeInsets.all(12),
+                          child: AdWidget(ad: _nativeAd!),
+                        );
+                      } else {
+                        int memoIndex = index;
+                        if (_isNativeAdLoaded && index > 1) {
+                          memoIndex--;
+                        }
+                        Map<String, dynamic> memo = memos[memoIndex];
+                        return SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          child: ListTile(
+                            leading: memo.containsKey('imagePath')
+                                ? (memo['imagePath'].startsWith('assets/')
+                                    ? Image.asset(
+                                        memo['imagePath'],
+                                        width: 32,
+                                        height: 32,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Image.asset(
+                                            'assets/images/icons/Default_icon.png',
+                                            width: 32,
+                                            height: 32,
+                                          );
+                                        },
+                                      )
+                                    : Image.file(
+                                        File(memo['imagePath']),
+                                        width: 32,
+                                        height: 32,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Image.asset(
+                                            'assets/images/icons/Default_icon.png',
+                                            width: 32,
+                                            height: 32,
+                                          );
+                                        },
+                                      ))
+                                : Image.asset(
+                                    'assets/images/icons/Default_icon.png',
+                                    width: 32,
+                                    height: 32,
+                                  ),
+                            title: Text(
+                              memo['title']!,
+                              style: const TextStyle(
+                                fontSize: 18.0,
+                              ),
+                            ),
+                            onTap: () {
+                              _showMemo(memo);
+                            },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                IconButton(
+                                  iconSize: 20,
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () async {
+                                    Map<String, dynamic>? editedMemo =
+                                        await _showEditMemoDialog(memo);
+                                    if (editedMemo != null) {
+                                      setState(() {
+                                        memos[memoIndex] = editedMemo;
+                                        _icons[iconIndex]['memos'] = memos;
+                                        _saveIcons();
+                                      });
+                                    }
+                                  },
                                 ),
-                          title: Text(
-                            memo['title']!,
-                            style: const TextStyle(
-                              fontSize: 18.0, // お好みのサイズに変更してください
+                                IconButton(
+                                  iconSize: 20,
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () async {
+                                    bool? confirm =
+                                        await _showDeleteConfirmDialog();
+                                    if (confirm == true) {
+                                      setState(() {
+                                        memos.removeAt(memoIndex);
+                                        _icons[iconIndex]['memos'] = memos;
+                                        _saveIcons();
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
                           ),
-                          onTap: () {
-                            _showMemo(memo);
-                          },
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              IconButton(
-                                iconSize: 20,
-                                icon: const Icon(Icons.edit),
-                                onPressed: () async {
-                                  Map<String, dynamic>? editedMemo =
-                                      await _showEditMemoDialog(memo);
-                                  if (editedMemo != null) {
-                                    setState(() {
-                                      memos[index] = editedMemo;
-                                      _icons[iconIndex]['memos'] = memos;
-                                      _saveIcons();
-                                    });
-                                  }
-                                },
-                              ),
-                              IconButton(
-                                iconSize: 20,
-                                icon: const Icon(Icons.delete),
-                                onPressed: () async {
-                                  bool? confirm =
-                                      await _showDeleteConfirmDialog();
-                                  if (confirm == true) {
-                                    setState(() {
-                                      memos.removeAt(index);
-                                      _icons[iconIndex]['memos'] = memos;
-                                      _saveIcons();
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                        );
+                      }
                     },
                   ),
                 ),
@@ -807,9 +823,10 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+// 広告読み込み
   void _loadTopBannerAd() {
     BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
+      adUnitId: AdHelper.mapBannerAdUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -825,27 +842,9 @@ class _MapPageState extends State<MapPage> {
     ).load();
   }
 
-  void _loadBottomBannerAd() {
-    BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {
-            _bottomBannerAd = ad as BannerAd;
-          });
-        },
-        onAdFailedToLoad: (ad, err) {
-          ad.dispose();
-        },
-      ),
-    ).load();
-  }
-
   Future<void> _loadMemoListBannerAd() async {
     _memoListBannerAd = BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
+      adUnitId: AdHelper.memoListBannerAdUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
@@ -865,11 +864,60 @@ class _MapPageState extends State<MapPage> {
     await _memoListBannerAd?.load();
   }
 
+  Future<void> _loadNativeAd() async {
+    _nativeAd = NativeAd(
+        adUnitId: AdHelper.nativeAdUnitId,
+        factoryId: 'listTile',
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            debugPrint('$NativeAd loaded.');
+            setState(() {
+              _isNativeAdLoaded = true;
+            });
+          },
+          onAdFailedToLoad: (ad, error) {
+            // Dispose the ad here to free resources.
+            debugPrint('$NativeAd failed to load: $error');
+            ad.dispose();
+          },
+        ),
+        request: const AdRequest(),
+        // Styling
+        nativeTemplateStyle: NativeTemplateStyle(
+            // Required: Choose a template.
+            templateType: TemplateType.small,
+            // Optional: Customize the ad's style.
+            mainBackgroundColor: Colors.white,
+            cornerRadius: 10.0,
+            callToActionTextStyle: NativeTemplateTextStyle(
+                textColor: Colors.white,
+                backgroundColor: Colors.blueAccent,
+                style: NativeTemplateFontStyle.bold,
+                size: 12.0),
+            primaryTextStyle: NativeTemplateTextStyle(
+                textColor: Colors.black,
+                backgroundColor: Colors.transparent,
+                style: NativeTemplateFontStyle.normal,
+                size: 12.0),
+            secondaryTextStyle: NativeTemplateTextStyle(
+                textColor: Colors.grey[800],
+                backgroundColor: Colors.transparent,
+                style: NativeTemplateFontStyle.italic,
+                size: 8.5),
+            tertiaryTextStyle: NativeTemplateTextStyle(
+                textColor: Colors.grey[600],
+                backgroundColor: Colors.transparent,
+                style: NativeTemplateFontStyle.normal,
+                size: 8.0)));
+    await _nativeAd?.load();
+  }
+
   @override
   void dispose() {
     _topBannerAd?.dispose();
-    _bottomBannerAd?.dispose();
+    // _bottomBannerAd?.dispose();
     _memoListBannerAd?.dispose();
+    _nativeAd?.dispose();
     super.dispose();
   }
 
@@ -881,7 +929,7 @@ class _MapPageState extends State<MapPage> {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           backgroundColor: const Color.fromARGB(255, 39, 125, 255),
-          title: const Text('Tap to add / Longpress to delete'),
+          title: const Text('Tap to Add Note'),
           bottom: TabBar(
             onTap: _onTabChanged,
             tabs: const [
@@ -1017,14 +1065,14 @@ class _MapPageState extends State<MapPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: AdSize.banner.width.toDouble(),
-              height: AdSize.banner.height.toDouble(),
-              child: _bottomBannerAd != null
-                  ? AdWidget(ad: _bottomBannerAd!)
-                  : Container(color: Colors.transparent),
-            ),
+            // const SizedBox(height: 16),
+            // SizedBox(
+            //   width: AdSize.banner.width.toDouble(),
+            //   height: AdSize.banner.height.toDouble(),
+            //   child: _bottomBannerAd != null
+            //       ? AdWidget(ad: _bottomBannerAd!)
+            //       : Container(color: Colors.transparent),
+            // ),
           ],
         ),
       ),
