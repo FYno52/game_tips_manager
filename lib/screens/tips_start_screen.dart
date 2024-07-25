@@ -37,8 +37,8 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
     _loadSortPreferences();
   }
 
-  void _loadTopBannerAd() {
-    BannerAd(
+  Future<void> _loadTopBannerAd() async {
+    _topBannerAd = BannerAd(
       adUnitId: AdHelper.tipsSelectBannerAdUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
@@ -52,7 +52,9 @@ class _TipsStartScreenState extends State<TipsStartScreen> {
           ad.dispose();
         },
       ),
-    ).load();
+    );
+
+    await _topBannerAd?.load();
   }
 
   // void _loadBottomBannerAd() {

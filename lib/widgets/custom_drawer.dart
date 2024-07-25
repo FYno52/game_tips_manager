@@ -43,7 +43,7 @@ class CustomDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.slideshow),
-            title: const Text('Tutorial Slide'),
+            title: const Text('How to Use'),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const TutorialPage()),

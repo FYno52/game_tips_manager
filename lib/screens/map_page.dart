@@ -8,6 +8,7 @@ import 'package:game_tips_manager/widgets/full_image_screen.dart';
 import 'package:game_tips_manager/widgets/video_player.dart';
 import 'package:game_tips_manager/widgets/web_view.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:convert';
@@ -56,7 +57,6 @@ class _MapPageState extends State<MapPage> {
     _loadIcons();
     _loadImagePath();
     _loadTopBannerAd();
-    // _loadBottomBannerAd();
     _loadMemoListBannerAd();
     _loadNativeAd();
     _loadIconColor();
@@ -66,24 +66,32 @@ class _MapPageState extends State<MapPage> {
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
+      final savedFile = await _saveFileToLocalDirectory(pickedFile);
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = savedFile;
         _isImageLoaded = false; // Reset the flag when a new image is picked
-        _saveImagePath(pickedFile.path); // Save the new image path
+        _saveImagePath(savedFile.path); // Save the new image path
       });
     }
+  }
+
+  Future<File> _saveFileToLocalDirectory(XFile pickedFile) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final File newImage = File('${directory.path}/${pickedFile.name}');
+    return File(pickedFile.path).copy(newImage.path);
   }
 
   Future<void> _saveImagePath(String path) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('${_imagePathKey}_${widget.pageId}', path);
+    print('Image path saved: $path');
   }
 
   Future<void> _loadImagePath() async {
     final prefs = await SharedPreferences.getInstance();
     final imagePath = prefs.getString('${_imagePathKey}_${widget.pageId}');
+    print('Loaded image path: $imagePath');
 
     if (imagePath != null && File(imagePath).existsSync()) {
       setState(() {
@@ -249,8 +257,9 @@ class _MapPageState extends State<MapPage> {
       final pickedFile =
           await ImagePicker().pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
+        final savedFile = await _saveFileToLocalDirectory(pickedFile);
         setState(() {
-          imageFile = File(pickedFile.path);
+          imageFile = savedFile;
         });
       }
     }
@@ -399,8 +408,9 @@ class _MapPageState extends State<MapPage> {
       final pickedFile =
           await ImagePicker().pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
+        final savedFile = await _saveFileToLocalDirectory(pickedFile);
         setState(() {
-          imageFile = File(pickedFile.path);
+          imageFile = savedFile;
         });
       }
     }
@@ -505,6 +515,7 @@ class _MapPageState extends State<MapPage> {
                     height: _memoListBannerAd!.size.height.toDouble(),
                     child: AdWidget(ad: _memoListBannerAd!),
                   ),
+                const Divider(thickness: 3),
                 Expanded(
                   child: ListView.builder(
                     shrinkWrap: true,
@@ -824,8 +835,8 @@ class _MapPageState extends State<MapPage> {
   }
 
 // 広告読み込み
-  void _loadTopBannerAd() {
-    BannerAd(
+  Future<void> _loadTopBannerAd() async {
+    _topBannerAd = BannerAd(
       adUnitId: AdHelper.mapBannerAdUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
@@ -839,7 +850,9 @@ class _MapPageState extends State<MapPage> {
           ad.dispose();
         },
       ),
-    ).load();
+    );
+
+    await _topBannerAd?.load();
   }
 
   Future<void> _loadMemoListBannerAd() async {
@@ -915,7 +928,6 @@ class _MapPageState extends State<MapPage> {
   @override
   void dispose() {
     _topBannerAd?.dispose();
-    // _bottomBannerAd?.dispose();
     _memoListBannerAd?.dispose();
     _nativeAd?.dispose();
     super.dispose();

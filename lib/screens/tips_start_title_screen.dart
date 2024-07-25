@@ -8,7 +8,6 @@ import 'package:game_tips_manager/widgets/custom_drawer.dart';
 import 'package:game_tips_manager/widgets/map_select_button.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
-// import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -39,8 +38,8 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
     _loadSortPreferences();
   }
 
-  void _loadTopBannerAd() {
-    BannerAd(
+  Future<void> _loadTopBannerAd() async {
+    _topBannerAd = BannerAd(
       adUnitId: AdHelper.titlesBannerAdUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
@@ -54,7 +53,9 @@ class _TipsStartTitleScreenState extends State<TipsStartTitleScreen> {
           ad.dispose();
         },
       ),
-    ).load();
+    );
+
+    await _topBannerAd?.load();
   }
 
   Future<String> _saveImageToFile(XFile image) async {

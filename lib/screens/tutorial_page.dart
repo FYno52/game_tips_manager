@@ -39,12 +39,27 @@ class _TutorialPageState extends State<TutorialPage> {
     List<Map<String, String?>> pages = [
       {
         'content':
-            '''👆 Switch between different tabs to organize your tips based on your needs.''',
-        'image': 'assets/images/tutorial/tab.png',
+            '''\n\n\n\n\n🎮 With this app, you can easily save and organize your favorite game tips!''',
+        'image': null,
       },
       {
         'content':
-            '''👆 Tap to add a marker at any position on the map.\n\n🤏 Zoom the map using pinch gestures.''',
+            '''➕ Add your favorite title.\nYou can manage tips for each title.\n\n👆 Long press to edit or delete.''',
+        'image': 'assets/images/tutorial/titles.png',
+      },
+      {
+        'content':
+            '''📚 Next, you can create a Tips option.\n\n👆 Long press to edit or delete.''',
+        'image': 'assets/images/tutorial/tips.png',
+      },
+      {
+        'content':
+            '''🖼️ Set up the necessary image.\n\n🗺️ For example, setting up a map raider can be effective.''',
+        'image': 'assets/images/tutorial/set_image.png',
+      },
+      {
+        'content':
+            '''👆 Tap to add a marker at any position on the image.\n\n🤏 Zoom the image using pinch gestures.''',
         'image': 'assets/images/tutorial/map.png',
       },
       {
@@ -74,11 +89,16 @@ class _TutorialPageState extends State<TutorialPage> {
       },
       {
         'content':
-            '''📤 Share tips data on the map with friends.\n\n⚠️ Uploaded images cannot be shared.''',
-        'image': 'assets/images/tutorial/file.png',
+            '''👆 Switch between different tabs to organize your tips based on your needs.''',
+        'image': 'assets/images/tutorial/tab.png',
       },
+      // {
+      //   'content':
+      //       '''📤 Share tips data on the map with friends.\n\n⚠️ Uploaded images cannot be shared.''',
+      //   'image': 'assets/images/tutorial/file.png',
+      // },
       {
-        'content': '''\n\n\n\n\n\n🐔 Enjoy! 🐔''',
+        'content': '''\n\n\n\n\n\n🎮 Enjoy! 🎮''',
         'image': null, // 最後のページは画像なし
       },
     ];
